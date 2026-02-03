@@ -1,0 +1,27 @@
+# X402 TRON Demo - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core x402-tron SDK with TRON and FastAPI support
+x402-tron[tron,fastapi] @ git+https://github.com/open-aibank/x402-tron@fix/opt_cicd#subdirectory=python/x402
+
+# Web framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# HTTP client
+httpx>=0.25.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# TRON blockchain
+tronpy>=0.4.0
+
+# Ethereum utilities (for address/signature handling)
+eth-account>=0.10.0
+
+# Image processing (for server protected resource)
+Pillow>=10.0.0
+
+# Data validation
+pydantic>=2.0.0
