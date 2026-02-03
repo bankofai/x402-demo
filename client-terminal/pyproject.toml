@@ -1,0 +1,16 @@
+[project]
+name = "x402-client-example"
+version = "0.1.0"
+description = "X402 Client Example"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.25.0",
+    "pydantic>=2.0.0",
+    "tronpy>=0.4.0",
+    "python-dotenv>=1.0.0",
+    "eth-account>=0.10.0",
+    "x402-tron[tron]",
+]
+
+[tool.uv.sources]
+x402-tron = { workspace = true }
