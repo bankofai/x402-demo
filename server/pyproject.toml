@@ -1,0 +1,15 @@
+[project]
+name = "x402-server-example"
+version = "0.1.0"
+description = "X402 Server Example"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+    "httpx>=0.25.0",
+    "pydantic>=2.0.0",
+    "tronpy>=0.4.0",
+    "python-dotenv>=1.0.0",
+    "eth-account>=0.10.0",
+    "x402-tron[fastapi,tron] @ git+https://github.com/open-aibank/x402-tron@fix/opt_cicd",
+]

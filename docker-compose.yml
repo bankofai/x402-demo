@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  x402-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: x402-tron-demo
+    ports:
+      - "8080:80"     # Client-web (nginx)
+      - "8000:8000"   # Server API
+      - "8001:8001"   # Facilitator API
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
