@@ -10,8 +10,8 @@ This is a complete example demonstrating how to use the **x402 protocol** (HTTP 
 - **Server**: Provides protected resources (requires payment to access)
 - **Facilitator**: Handles payment verification and on-chain settlement
 - **Client**: Two client implementations
-  - `client-web`: React web version (payment via TronLink wallet)
-  - `client-terminal.py`: Python CLI version (automatic payment via private key)
+  - `client/web`: React web version (payment via TronLink wallet)
+  - `client/terminal`: Python CLI version (automatic payment via private key)
 
 **Payment Flow:**
 1. Client requests protected resource
@@ -26,8 +26,8 @@ This is a complete example demonstrating how to use the **x402 protocol** (HTTP 
 
 - **Docker** (recommended for Scenario 2)
 - **Python 3.12+** (for Scenario 1 or local development)
-- **Node.js 18+** (only for client-web local development)
-- **TRON Wallet** (TronLink browser extension for client-web)
+- **Node.js 18+** (only for client web local development)
+- **TRON Wallet** (TronLink browser extension for client web)
 
 ---
 
@@ -92,7 +92,7 @@ Services will print supported networks and tokens on startup.
 **Terminal 3:**
 ```bash
 ./start.sh client
-# or directly: python client-terminal/main.py
+# or directly: python client/terminal/main.py
 ```
 
 The client will:
@@ -124,7 +124,7 @@ docker compose up -d --build
 ```
 
 This starts a container with the following services:
-- **Nginx** (port 8080): Hosts client-web
+- **Nginx** (port 8080): Hosts client web
 - **Server** (port 8000): Provides protected resources
 - **Facilitator** (port 8001): Handles payments
 
@@ -155,7 +155,7 @@ docker compose down
 ## FAQ
 
 ### Q1: "Unsupported network" error
-**A:** client-web only supports **Nile** and **Shasta** testnets. Please switch network in TronLink and reconnect wallet.
+**A:** client web only supports **Nile** and **Shasta** testnets. Please switch network in TronLink and reconnect wallet.
 
 ### Q2: Terminal client error "TRON_PRIVATE_KEY not found"
 **A:** Ensure `.env` file exists in project root and contains `TRON_PRIVATE_KEY=...`.
@@ -188,10 +188,11 @@ x402-tron-demo/
 ├── requirements.txt          # Python dependencies (unified)
 ├── start.sh                  # Unified startup script
 ├── .env                      # Environment variables (create yourself)
-├── client-terminal/          # Terminal client (CLI)
-│   ├── main.py
-│   └── README.md
-├── client-web/               # React web client
+├── client/                   # Clients
+│   ├── terminal/             # Terminal client (CLI)
+│   │   ├── main.py
+│   │   └── README.md
+│   └── web/                  # React web client
 ├── server/                   # Protected resource server
 │   └── main.py
 ├── facilitator/              # Payment processing service

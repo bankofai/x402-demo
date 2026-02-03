@@ -51,7 +51,7 @@ case "$COMPONENT" in
         echo "=========================================="
         echo "Starting X402 Terminal Client"
         echo "=========================================="
-        cd client-terminal
+        cd client/terminal
         python main.py
         ;;
     *)

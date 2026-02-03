@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="X402 Server", description="Protected resource server")
 
-# Add CORS middleware to allow cross-origin requests from client-web
+# Add CORS middleware to allow cross-origin requests from client/web
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # In production, specify exact origins

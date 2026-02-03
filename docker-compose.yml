@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: x402-tron-demo
     ports:
-      - "8080:80"     # Client-web (nginx)
+      - "8080:80"     # Client web (nginx)
       - "8000:8000"   # Server API
       - "8001:8001"   # Facilitator API
     volumes:
