@@ -12,6 +12,7 @@ from x402.server import X402Server
 from x402.fastapi import x402_protected
 from x402.facilitator import FacilitatorClient
 from x402.config import NetworkConfig
+from x402.tokens.registry import TokenRegistry
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -65,6 +66,14 @@ facilitator = FacilitatorClient(base_url=FACILITATOR_URL)
 server.add_facilitator(facilitator)
 
 print(f"Server Configuration:")
+print("Supported TRON networks:")
+for n, cid in NetworkConfig.CHAIN_IDS.items():
+    print(f"  - {n} (chainId={cid})")
+    tokens = TokenRegistry.get_network_tokens(n)
+    if tokens:
+        print("    Tokens:")
+        for sym, info in tokens.items():
+            print(f"      - {sym}: {info.address} (decimals={info.decimals})")
 print(f"  Network: {NetworkConfig.TRON_NILE}")
 print(f"  Pay To: {PAY_TO_ADDRESS}")
 print(f"  Facilitator URL: {FACILITATOR_URL}")

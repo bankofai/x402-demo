@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useWallet } from '@tronweb3/tronwallet-adapter-react-hooks';
 import { WalletActionButton } from '@tronweb3/tronwallet-adapter-react-ui';
 import type { PaymentRequired, PaymentRequirements } from '../types';
@@ -23,6 +23,15 @@ const TOKEN_NAMES: Record<string, string> = {
   'TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8': 'USDC',
 };
 
+function detectTronNetworkFromHost(host: string | undefined): 'nile' | 'shasta' | 'mainnet' | 'unknown' {
+  if (!host) return 'unknown';
+  const h = host.toLowerCase();
+  if (h.includes('nile')) return 'nile';
+  if (h.includes('shasta')) return 'shasta';
+  if (h.includes('trongrid') || h.includes('mainnet')) return 'mainnet';
+  return 'unknown';
+}
+
 export function PaymentCard({
   paymentRequired,
   serverUrl,
@@ -35,6 +44,21 @@ export function PaymentCard({
   const [selectedRequirement, setSelectedRequirement] = useState<PaymentRequirements>(
     paymentRequired.accepts[0]
   );
+
+  const [walletNetwork, setWalletNetwork] = useState<'nile' | 'shasta' | 'mainnet' | 'unknown'>('unknown');
+
+  useEffect(() => {
+    if (!connected) {
+      setWalletNetwork('unknown');
+      return;
+    }
+
+    const tronWeb = (window as unknown as { tronWeb?: { fullNode?: { host?: string } } }).tronWeb;
+    const host = tronWeb?.fullNode?.host;
+    setWalletNetwork(detectTronNetworkFromHost(host));
+  }, [connected]);
+
+  const isSupportedNetwork = walletNetwork === 'nile' || walletNetwork === 'shasta';
 
   const networkName = useMemo(() => {
     return NETWORK_NAMES[selectedRequirement.network] || selectedRequirement.network;
@@ -57,6 +81,11 @@ export function PaymentCard({
   const handlePay = useCallback(async () => {
     if (!connected || !address || !wallet) {
       onError('Please connect your wallet first');
+      return;
+    }
+
+    if (!isSupportedNetwork) {
+      onError('Unsupported network. Please switch to Nile or Shasta and reselect the wallet.');
       return;
     }
 
@@ -118,6 +147,7 @@ export function PaymentCard({
     connected,
     address,
     wallet,
+    isSupportedNetwork,
     selectedRequirement,
     paymentRequired.extensions,
     serverUrl,
@@ -160,6 +190,12 @@ export function PaymentCard({
           {/* Disconnect Button */}
           <WalletActionButton className="w-full btn-secondary" />
 
+          {!isSupportedNetwork && (
+            <div className="border border-red-200 bg-red-50 text-red-700 rounded-xl px-4 py-3 text-sm">
+              Unsupported network. Please switch TronLink to <b>Nile</b> or <b>Shasta</b>, then reconnect.
+            </div>
+          )}
+
           {/* Payment Details */}
           <div className="space-y-4 py-6 border-y border-gray-200">
             <div className="flex justify-between items-center">
@@ -187,7 +223,7 @@ export function PaymentCard({
           {/* Pay Button */}
           <button
             onClick={handlePay}
-            disabled={isPaying}
+            disabled={isPaying || !isSupportedNetwork}
             className="w-full btn-primary text-lg"
           >
             {isPaying ? 'Processing...' : 'Pay now'}

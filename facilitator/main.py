@@ -17,6 +17,8 @@ import uvicorn
 from x402.logging_config import setup_logging
 from x402.mechanisms.facilitator import UptoTronFacilitatorMechanism
 from x402.signers.facilitator import TronFacilitatorSigner
+from x402.config import NetworkConfig
+from x402.tokens.registry import TokenRegistry
 from x402.types import (
     PaymentPayload,
     PaymentRequirements,
@@ -91,6 +93,14 @@ facilitator_mechanism = UptoTronFacilitatorMechanism(
 )
 
 print(f"Facilitator initialized:")
+print("Supported TRON networks:")
+for n, cid in NetworkConfig.CHAIN_IDS.items():
+    print(f"  - {n} (chainId={cid})")
+    tokens = TokenRegistry.get_network_tokens(n)
+    if tokens:
+        print("    Tokens:")
+        for sym, info in tokens.items():
+            print(f"      - {sym}: {info.address} (decimals={info.decimals})")
 print(f"  Address: {facilitator_address}")
 print(f"  Network: {TRON_NETWORK}")
 print(f"  Base Fee: {BASE_FEE}")
