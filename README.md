@@ -15,33 +15,7 @@ TRON_PRIVATE_KEY=...   # Facilitator signing key
 PAY_TO_ADDRESS=...     # Recipient TRON address
 ```
 
-## Docker: build & run (step-by-step)
-
-1. Create and fill `.env`
-
-2. Build image
-
-```bash
-./build_docker.sh
-```
-
-3. Run container
-
-```bash
-./start_docker.sh
-```
-
-4. Open
-
-- http://localhost:8080
-
-5. Stop
-
-```bash
-./stop_docker.sh
-```
-
-### Alternative: docker compose
+## Docker: build & run (docker compose)
 
 1. Create and fill `.env`
 
