@@ -47,7 +47,7 @@ app.add_middleware(
 )
 
 # Configuration
-PAY_TO_ADDRESS = os.getenv("PAY_TO_ADDRESS") or "TDhj8uX7SVJwvhCUrMaiQHqPgrB6wRb3eG"
+PAY_TO_ADDRESS = os.getenv("PAY_TO_ADDRESS")
 # Hardcoded server configuration
 FACILITATOR_URL = "http://localhost:8001"
 SERVER_HOST = "0.0.0.0"
@@ -110,7 +110,7 @@ async def protected_endpoint(request: Request):
         draw = ImageDraw.Draw(image)
 
         try:
-            font = ImageFont.truetype("DejaVuSans.ttf", 260)
+            font = ImageFont.truetype("DejaVuSans.ttf", 200)
         except Exception:
             font = ImageFont.load_default()
         text = f"NO. {request_count}"
@@ -125,7 +125,7 @@ async def protected_endpoint(request: Request):
         draw.text(
             (x, y),
             text,
-            fill=(255, 0, 0, 255),
+            fill=(255, 0, 0, 0),
             font=font,
         )
 
