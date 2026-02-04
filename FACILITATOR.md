@@ -13,6 +13,20 @@ The **Facilitator Module** handles payment validation and transaction settlement
 
 ---
 
+## Configuration
+
+### Environment Variables
+1. **TRON_PRIVATE_KEY:** Used for blockchain interactions.
+2. **FACILITATOR_URL:** Endpoint for permit submission.
+
+Example `.env` configuration:
+```env
+TRON_PRIVATE_KEY=<private_key>
+FACILITATOR_URL=http://localhost:8001
+```
+
+---
+
 ## API Endpoints
 
 | Endpoint       | Method | Description                                |
@@ -24,20 +38,6 @@ The **Facilitator Module** handles payment validation and transaction settlement
 **Example Request**:
 ```bash
 curl -X POST http://localhost:8001/settle -d '{"permit": {...}}'
-```
-
----
-
-## Environment Configuration
-
-### Environment Variables
-1. **TRON_PRIVATE_KEY:** Used for blockchain interactions.
-2. **FACILITATOR_URL:** Endpoint for permit submission.
-
-Example `.env` configuration:
-```env
-TRON_PRIVATE_KEY=<private_key>
-FACILITATOR_URL=http://localhost:8001
 ```
 
 ---

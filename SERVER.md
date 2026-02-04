@@ -17,7 +17,7 @@ The **Resource Server** securely delivers resources protected by blockchain paym
 
 ---
 
-## Environment Configuration
+## Configuration
 
 ### Environment Variables
 1. **PAY_TO_ADDRESS:** TRON wallet receiving funds.

@@ -2,19 +2,7 @@
 
 ## Overview
 
-The **Client Module** enables direct user interaction with resources protected by the x402 payment protocol. Two implementations are provided: **command-line client (CLI)** and **React-based Web Client**.
-
----
-
-## Features
-
-### Terminal Client
-CLI-based tool for automated transaction submissions and resource retrieval.
-
-### Web Client
-User-friendly interface powered by React, designed for TronLink-enabled workflows.
-
----
+The **Client Module** enables direct user interaction with resources protected by the x402 payment protocol. Two implementations are provided: **Terminal Client (CLI)** and **Web Client**.
 
 ## Configuration
 
@@ -32,7 +20,13 @@ FACILITATOR_URL=http://localhost:8001
 
 ---
 
-## Terminal Client (CLI)
+## Usage
+
+### Terminal Client
+
+**Features**:
+- Automated transaction submissions.
+- Automatic resource retrieval upon payment.
 
 **Workflow**:
 1. Requests `/protected` endpoint triggering `402 Payment Required`.
@@ -45,11 +39,10 @@ FACILITATOR_URL=http://localhost:8001
 ./start.sh client
 ```
 
----
-
-## Web Client
+### Web Client
 
 **Features**:
+- User-friendly interface powered by React.
 - Wallet integration using TronLink.
 - Permit signing via Web UI.
 

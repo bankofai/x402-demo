@@ -2,57 +2,60 @@
 
 ## Overview
 
-The **X402-Tron Demo** showcases a blockchain-powered implementation of the **x402 payment protocol**, enabling secure pay-to-access workflows. The demo demonstrates how decentralized payments can facilitate resource access using an **Agent-based payment model** as a conceptual framework, even if the underlying implementation uses standard Python services.
+The **X402-Tron Demo** provides a practical demonstration of integrating the **x402 payment protocol** with the TRON blockchain. While not a fully-fledged application, this demo aims to showcase how decentralized micropayments can be used to enable pay-per-access workflows.
 
-### Key Concept: Agent-Like Payment Flow
+### Key Concept: Payment Workflow Simulation
 
-Although powered by Python servers, the demo simulates an **Agent-driven interaction model**: 
-1. The **Client Agent** interacts with a **Server Agent** to request access to protected resources.
-2. Upon receiving a `402 Payment Required` challenge, the Client operates similarly to an agent by signing cryptographic permits to fulfill payment requirements.
-3. The **Facilitator Agent**, acting conceptually as a payment handler, validates these permits and settles the transactions on the TRON blockchain.
-4. After payment confirmation, the Server delivers the resource to the Client Agent.
+The demo simulates a payment workflow involving three conceptual agents:
+1. The **Client Agent** requests access to protected resources from the **Server Agent**.
+2. Upon receiving a `402 Payment Required` challenge, the Client signs a cryptographic permit to meet payment requirements.
+3. The **Facilitator Agent** validates the signed permit and settles the transaction on the TRON blockchain.
+4. Once payment confirmation is complete, the Server delivers the requested resource.
 
-This framework ensures:
-- **Trustless Transactions**: Payments are cryptographically verified and settled on-chain.
-- **Flexible Interactions**: Agents interact seamlessly to execute workflows, even using basic underlying services.
-- **Scalability**: Designed for microtransactions with minimal overhead, supporting decentralized applications (dApps).
+Though the implementation relies on standard Python services, the demo is designed to illustrate the x402 payment flow conceptually. It demonstrates:
+- Cryptographic payment permits (TIP-712 format).
+- Blockchain transaction validation and settlement.
 
 ---
 
 ## Table of Contents
 1. [Core Components](#core-components)
 2. [Environment Setup](#environment-setup)
-3. [Running the Demo](#running-the-demo)
-4. [Additional Documentation](#additional-documentation)
+3. [Quick Start](#quick-start)
+4. [License](#license)
+5. [Additional Documentation](#additional-documentation)
 
 ---
 
 ## Core Components
 
-### **Server: Resource Provider Agent (Conceptual)**
-- **Purpose:** Monetizes premium resources such as dynamically generated images via blockchain-based payments.
-- **Features:**
-  - Implements the x402 payment protocol (HTTP 402 Payment Required).
-  - Protects resources by validating TRON blockchain transactions.
+### **Server: Resource Provider**
+- **Purpose:** Hosts protected resources requiring blockchain-based payments.
+- **Implementation:**
+  - Verifies cryptographic payment receipts.
+  - Securely delivers resources upon payment validation.
 
-### **Facilitator: Payment Handler Agent (Conceptual)**
-- **Purpose:** Processes and validates cryptographic payment permits.
-- **Features:**
-  - Ensures signed permits comply with the TIP-712 standard.
-  - Settles micropayments on the TRON Nile Testnet.
+### **Facilitator: Payment Processor**
+- **Purpose:** Intermediates payment validation and transaction settlement on the blockchain.
+- **Implementation:**
+  - Validates signed payment permits (TIP-712).
+  - Settles micropayments using the TRON Nile Testnet.
 
-### **Client: Requesting Agent**
-- **CLI Client:**
-  - Operates as an agent to sign permits and automate resource retrieval.
-- **Web Client:**
-  - Simulates manual agent-like behavior using the TronLink wallet.
+### **Client: Resource Requester**
+- **CLI Client:** Automates permit signing and resource retrieval workflows.
+- **Web Client:** Offers a user-friendly interface for interacting with TronLink wallets.
 
 ---
 
 ## Environment Setup
 
-### **Required Environment Variables**
-Create a `.env` file in the project root to configure blockchain and service settings:
+### Prerequisites
+- **Python 3.9+** (for local execution)
+- **Node.js 18+** (for Web Client development)
+- **Docker** (optional, for containerized deployment)
+
+### Configuration
+Before running the demo, create a `.env` file in the project root:
 
 ```env
 # TRON private key for Facilitator's blockchain interactions.
@@ -61,39 +64,18 @@ TRON_PRIVATE_KEY=<your_tron_private_key>
 # Payment recipient address for Server.
 PAY_TO_ADDRESS=<server_recipient_tron_address>
 
-# Server URL for accessing secured resources.
+# Service URLs (defaults)
 SERVER_URL=http://localhost:8000
-
-# Facilitator API URL for payment validation.
 FACILITATOR_URL=http://localhost:8001
-
-# HTTP timeout for requests.
 HTTP_TIMEOUT_SECONDS=60
 ```
 
-### **Installation Steps**
-
-1. **Clone the repository:**
-   ```bash
-   git clone <repo-url>
-   cd x402-tron-demo
-   ```
-
-2. **Set up the `.env` file:**
-   Configure environment variables as outlined above.
-
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   npm install # For web client dependencies
-   ```
-
 ---
 
-## Running the Demo
+## Quick Start
 
-### **Using Shell Scripts**
-To simplify running services:
+### Using Scripts
+Quickly start the demo services using the provided scripts:
 
 ```bash
 # Start Facilitator
@@ -105,32 +87,22 @@ To simplify running services:
 # Run Terminal Client
 ./start.sh client
 
-# Run Web Client (Local Development)
+# Start Web Client (Development)
 cd client/web && npm run dev
 ```
 
-### **Accessing the Demo**
-1. **CLI Client:**
-   Use the CLI to request `protected_image.png` from the server:
-   ```bash
-   ./start.sh client
-   ```
-   After resolving payment challenges (via TRON Nile), the protected resource will be downloaded locally.
-
-2. **Web Client:**
-   Navigate to `http://localhost:5173` (or `http://localhost:8080` if using Docker) to:
-   - Connect your TronLink wallet.
-   - Sign payment permits.
-   - Access premium resources through the intuitive web interface.
-
-### **Docker Setup**
-Alternatively, deploy the demo containerized:
+### Using Docker
+Alternatively, deploy all services with Docker Compose:
 ```bash
 docker-compose up -d
 ```
-Access services via:
-- **Web Client**: `http://localhost:8080`
-- **Server API**: `http://localhost:8000`
+Access the Web Client at `http://localhost:8080` and Server at `http://localhost:8000`.
+
+---
+
+## License
+
+This project is open source under the **MIT License**. See the [LICENSE](LICENSE.md) file for more information.
 
 ---
 
