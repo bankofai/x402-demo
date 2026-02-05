@@ -14,7 +14,7 @@ export function Home() {
         </p>
         
         <button
-          onClick={() => navigate('/protected')}
+          onClick={() => navigate('/protected-nile')}
           className="btn-primary text-lg inline-flex items-center gap-3"
         >
           Try it

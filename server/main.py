@@ -12,7 +12,7 @@ from x402_tron.server import X402Server
 from x402_tron.fastapi import x402_protected
 from x402_tron.facilitator import FacilitatorClient
 from x402_tron.config import NetworkConfig
-from x402_tron.tokens.registry import TokenRegistry
+from x402_tron.tokens import TokenRegistry
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -26,10 +26,10 @@ logging.basicConfig(
 )
 
 # Set specific loggers to DEBUG for detailed output
-logging.getLogger("x402").setLevel(logging.DEBUG)
-logging.getLogger("x402.server").setLevel(logging.DEBUG)
-logging.getLogger("x402.fastapi").setLevel(logging.DEBUG)
-logging.getLogger("x402.utils").setLevel(logging.DEBUG)
+logging.getLogger("x402_tron").setLevel(logging.DEBUG)
+logging.getLogger("x402_tron.server").setLevel(logging.DEBUG)
+logging.getLogger("x402_tron.fastapi").setLevel(logging.DEBUG)
+logging.getLogger("x402_tron.utils").setLevel(logging.DEBUG)
 logging.getLogger("uvicorn.access").setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,14 @@ app.add_middleware(
 
 # Configuration
 PAY_TO_ADDRESS = os.getenv("PAY_TO_ADDRESS")
-# Hardcoded server configuration
+if not PAY_TO_ADDRESS:
+    raise ValueError("PAY_TO_ADDRESS environment variable is required")
+
+# Network selection - Change this to use different networks
+# Options: NetworkConfig.TRON_MAINNET, NetworkConfig.TRON_NILE, NetworkConfig.TRON_SHASTA
+CURRENT_NETWORK = NetworkConfig.TRON_NILE
+
+# Server configuration
 FACILITATOR_URL = "http://localhost:8001"
 SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 8000
@@ -65,18 +72,63 @@ server = X402Server()
 facilitator = FacilitatorClient(base_url=FACILITATOR_URL)
 server.add_facilitator(facilitator)
 
-print(f"Server Configuration:")
-print("Supported TRON networks:")
-for n, cid in NetworkConfig.CHAIN_IDS.items():
-    print(f"  - {n} (chainId={cid})")
-    tokens = TokenRegistry.get_network_tokens(n)
-    if tokens:
-        print("    Tokens:")
-        for sym, info in tokens.items():
-            print(f"      - {sym}: {info.address} (decimals={info.decimals})")
-print(f"  Network: {NetworkConfig.TRON_NILE}")
-print(f"  Pay To: {PAY_TO_ADDRESS}")
-print(f"  Facilitator URL: {FACILITATOR_URL}")
+print("=" * 80)
+print("X402 Protected Resource Server - Configuration")
+print("=" * 80)
+print(f"Current Network: {CURRENT_NETWORK}")
+print(f"Pay To Address: {PAY_TO_ADDRESS}")
+print(f"Facilitator URL: {FACILITATOR_URL}")
+print(f"PaymentPermit Contract: {NetworkConfig.get_payment_permit_address(CURRENT_NETWORK)}")
+
+registered_networks = sorted(server._mechanisms.keys())
+print(f"\nAll Registered Networks ({len(registered_networks)}):")
+for net in registered_networks:
+    tokens = TokenRegistry.get_network_tokens(net)
+    is_current = " (CURRENT)" if net == CURRENT_NETWORK else ""
+    print(f"  {net}{is_current}:")
+    if not tokens:
+        print("    (no tokens registered)")
+        continue
+    for symbol, info in tokens.items():
+        print(f"    {symbol}: {info.address} (decimals={info.decimals})")
+print("=" * 80)
+
+def generate_protected_image(text: str, text_color: tuple[int, int, int, int] = (255, 255, 0, 255)) -> io.BytesIO:
+    """Generate a protected image with custom text and color"""
+    with Image.open(PROTECTED_IMAGE_PATH) as base:
+        image = base.convert("RGBA")
+        draw = ImageDraw.Draw(image)
+
+        try:
+            font = ImageFont.truetype("DejaVuSans.ttf", 50)
+        except Exception:
+            font = ImageFont.load_default()
+
+        x = 16
+        y = 16
+        padding = 6
+
+        bbox = draw.textbbox((x, y), text, font=font)
+        bg = (
+            bbox[0] - padding,
+            bbox[1] - padding,
+            bbox[2] + padding,
+            bbox[3] + padding,
+        )
+        draw.rectangle(bg, fill=(0, 0, 0, 160))
+        draw.text(
+            (x, y),
+            text,
+            fill=text_color,
+            font=font,
+            stroke_width=2,
+            stroke_fill=(0, 0, 0, 255),
+        )
+
+        buf = io.BytesIO()
+        image.save(buf, format="PNG")
+        buf.seek(0)
+        return buf
 
 @app.get("/")
 async def root():
@@ -88,11 +140,13 @@ async def root():
         "facilitator": FACILITATOR_URL,
     }
 
-@app.get("/protected")
+@app.get("/protected-nile")
 @x402_protected(
     server=server,
-    price="1 USDT",  # 1 USDT = 1000000 (6 decimals)
-    network=NetworkConfig.TRON_NILE,
+    price="0.0001 USDT",  # Price format: "<amount> <token_symbol>"
+                     # Currently only USDT is supported
+                     # Token must be registered in TokenRegistry for the network
+    network=CURRENT_NETWORK,  # Uses the network configured above
     pay_to=PAY_TO_ADDRESS,
 )
 async def protected_endpoint(request: Request):
@@ -105,34 +159,27 @@ async def protected_endpoint(request: Request):
         _request_count += 1
         request_count = _request_count
 
-    with Image.open(PROTECTED_IMAGE_PATH) as base:
-        image = base.convert("RGBA")
-        draw = ImageDraw.Draw(image)
+    buf = generate_protected_image(f"req: {request_count}", text_color=(255, 255, 0, 255))
+    return StreamingResponse(buf, media_type="image/png")
 
-        try:
-            font = ImageFont.truetype("DejaVuSans.ttf", 200)
-        except Exception:
-            font = ImageFont.load_default()
-        text = f"NO. {request_count}"
+@app.get("/protected-mainnet")
+@x402_protected(
+    server=server,
+    price="0.0001 USDT",  # Price format: "<amount> <token_symbol>"
+    network=NetworkConfig.TRON_MAINNET,  # Uses TRON mainnet
+    pay_to=PAY_TO_ADDRESS,
+)
+async def protected_mainnet_endpoint(request: Request):
+    """Serve the protected image (mainnet payment) - generated dynamically"""
+    global _request_count
+    if not PROTECTED_IMAGE_PATH.exists():
+        return {"error": "Protected image not found"}
 
-        margin = 16
-        bbox = draw.textbbox((0, 0), text, font=font)
-        text_w = bbox[2] - bbox[0]
-        text_h = bbox[3] - bbox[1]
-        x = image.width - margin - text_w
-        y = image.height - margin - text_h
+    with _request_count_lock:
+        _request_count += 1
+        request_count = _request_count
 
-        draw.text(
-            (x, y),
-            text,
-            fill=(255, 0, 0, 0),
-            font=font,
-        )
-
-        buf = io.BytesIO()
-        image.save(buf, format="PNG")
-        buf.seek(0)
-
+    buf = generate_protected_image(f"mainnet req: {request_count}", text_color=(0, 255, 0, 255))
     return StreamingResponse(buf, media_type="image/png")
 
 if __name__ == "__main__":
@@ -144,8 +191,8 @@ if __name__ == "__main__":
     print(f"Host: {SERVER_HOST}")
     print(f"Port: {SERVER_PORT}")
     print(f"Endpoints:")
-    print(f"  /protected          - Payment only (1 USDT)")
-    print(f"  /protected-with-fee - Payment with fee (2 USDT + 1 USDT fee)")
+    print(f"  /protected-nile     - Payment (0.0001 USDT) [Nile testnet]")
+    print(f"  /protected-mainnet  - Payment (0.0001 USDT) [Mainnet]")
     print("=" * 80 + "\n")
     
     uvicorn.run(
