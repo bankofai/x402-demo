@@ -162,24 +162,24 @@ async def protected_endpoint(request: Request):
     buf = generate_protected_image(f"req: {request_count}", text_color=(255, 255, 0, 255))
     return StreamingResponse(buf, media_type="image/png")
 
-@app.get("/protected-mainnet")
+@app.get("/protected-shasta")
 @x402_protected(
     server=server,
     price="0.0001 USDT",  # Price format: "<amount> <token_symbol>"
-    network=NetworkConfig.TRON_MAINNET,  # Uses TRON mainnet
+    network=NetworkConfig.TRON_SHASTA,  # Uses TRON shasta testnet
     pay_to=PAY_TO_ADDRESS,
 )
-async def protected_mainnet_endpoint(request: Request):
-    """Serve the protected image (mainnet payment) - generated dynamically"""
+async def protected_shasta_endpoint(request: Request):
+    """Serve the protected image (shasta payment) - generated dynamically"""
     global _request_count
     if not PROTECTED_IMAGE_PATH.exists():
         return {"error": "Protected image not found"}
-
-    with _request_count_lock:
+    
+    async with _request_count_lock:
         _request_count += 1
         request_count = _request_count
 
-    buf = generate_protected_image(f"mainnet req: {request_count}", text_color=(0, 255, 0, 255))
+    buf = generate_protected_image(f"shasta req: {request_count}", text_color=(0, 255, 0, 255))
     return StreamingResponse(buf, media_type="image/png")
 
 if __name__ == "__main__":
@@ -192,7 +192,7 @@ if __name__ == "__main__":
     print(f"Port: {SERVER_PORT}")
     print(f"Endpoints:")
     print(f"  /protected-nile     - Payment (0.0001 USDT) [Nile testnet]")
-    print(f"  /protected-mainnet  - Payment (0.0001 USDT) [Mainnet]")
+    print(f"  /protected-shasta   - Payment (0.0001 USDT) [Shasta testnet]")
     print("=" * 80 + "\n")
     
     uvicorn.run(

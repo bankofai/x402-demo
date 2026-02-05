@@ -56,7 +56,7 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 TRON_PRIVATE_KEY = os.getenv("TRON_PRIVATE_KEY", "")
 
 # Supported networks
-SUPPORTED_NETWORKS = ["mainnet", "nile"]
+SUPPORTED_NETWORKS = ["shasta", "nile"]
 
 # Facilitator configuration
 FACILITATOR_HOST = "0.0.0.0"
