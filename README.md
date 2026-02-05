@@ -1,228 +1,117 @@
-# X402-tron Demo
+# X402-Tron Demo
 
-A complete demonstration of the **x402 payment protocol** on the TRON blockchain.
+## Overview
 
-## What is this project?
+The **X402-Tron Demo** provides a practical demonstration of integrating the **x402 payment protocol** with the TRON blockchain. While not a fully-fledged application, this demo aims to showcase how decentralized micropayments can be used to enable pay-per-access workflows.
 
-This is a complete example demonstrating how to use the **x402 protocol** (HTTP 402 Payment Required) to implement "pay-first, access-later" functionality on the TRON blockchain.
+### Key Concept: Payment Workflow Simulation
 
-**Core Components:**
-- **Server**: Provides protected resources (requires payment to access)
-- **Facilitator**: Handles payment verification and on-chain settlement
-- **Client**: Two client implementations
-  - `client/web`: React web version (payment via TronLink wallet)
-  - `client/terminal`: Python CLI version (automatic payment via private key)
+The demo simulates a payment workflow involving three conceptual agents:
+1. The **Client Agent** requests access to protected resources from the **Server Agent**.
+2. Upon receiving a `402 Payment Required` challenge, the Client signs a cryptographic permit to meet payment requirements.
+3. The **Facilitator Agent** validates the signed permit and settles the transaction on the TRON blockchain.
+4. Once payment confirmation is complete, the Server delivers the requested resource.
 
-**Payment Flow:**
-1. Client requests protected resource
-2. Server returns 402 Payment Required + payment requirements
-3. Client signs payment permit (PaymentPermit)
-4. Facilitator verifies signature and executes on-chain transfer
-5. Server returns protected resource
+Though the implementation relies on standard Python services, the demo is designed to illustrate the x402 payment flow conceptually. It demonstrates:
+- Cryptographic payment permits (TIP-712 format).
+- Blockchain transaction validation and settlement.
 
 ---
 
-## Requirements
-
-- **Docker** (recommended for Scenario 2)
-- **Python 3.12+** (for Scenario 1 or local development)
-- **Node.js 18+** (only for client web local development)
-- **TRON Wallet** (TronLink browser extension for client web)
-
----
-
-## Step 1: Environment Setup
-
-### 1. Clone Repository
-
-```bash
-git clone <repo-url>
-cd x402-tron-demo
-```
-
-### 2. Create `.env` File
-
-Create a `.env` file in the project root with the following content:
-
-```bash
-# Facilitator's TRON private key (for signing and settlement)
-TRON_PRIVATE_KEY=your_private_key_here
-
-# Payment recipient address (TRON address for Server to receive payments)
-PAY_TO_ADDRESS=your_tron_address_here
-```
-
-**Get Test Tokens:**
-- Visit [Nile Testnet Faucet](https://nileex.io/join/getJoinPage)
-- Get test TRX and USDT
+## Table of Contents
+1. [Core Components](#core-components)
+2. [Environment Setup](#environment-setup)
+3. [Quick Start](#quick-start)
+4. [License](#license)
+5. [Additional Documentation](#additional-documentation)
 
 ---
 
-## Scenario 1: Terminal Client + Local Services
+## Core Components
 
-**Best for:** Developer quick testing, automation scripts
+### **Server: Resource Provider**
+- **Purpose:** Hosts protected resources requiring blockchain-based payments.
+- **Implementation:**
+  - Verifies cryptographic payment receipts.
+  - Securely delivers resources upon payment validation.
 
-### Step 1: Install Python Dependencies
+### **Facilitator: Payment Processor**
+- **Purpose:** Intermediates payment validation and transaction settlement on the blockchain.
+- **Implementation:**
+  - Validates signed payment permits (TIP-712).
+  - Settles micropayments using the TRON Nile Testnet.
+- **Deployment:** Can be self-hosted (using this repository) or provided by an official service (*official address coming soon*).
 
-```bash
-# Create virtual environment (recommended)
-python3 -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+### **Client: Resource Requester**
+- **CLI Client:** Automates permit signing and resource retrieval workflows.
+- **Web Client:** Offers a user-friendly interface for interacting with TronLink wallets.
 
-# Install dependencies
-pip install -r requirements.txt
+---
+
+## Environment Setup
+
+### Prerequisites
+- **Python 3.9+** (for local execution)
+- **Node.js 18+** (for Web Client development)
+- **Docker** (optional, for containerized deployment)
+
+### Configuration
+Before running the demo, create a `.env` file in the project root:
+
+```env
+# TRON private key for Facilitator's blockchain interactions.
+TRON_PRIVATE_KEY=<your_tron_private_key>
+
+# Payment recipient address for Server.
+PAY_TO_ADDRESS=<server_recipient_tron_address>
+
+# Service URLs (defaults)
+SERVER_URL=http://localhost:8000
+FACILITATOR_URL=http://localhost:8001
+HTTP_TIMEOUT_SECONDS=60
 ```
 
-### Step 2: Start Backend Services
+---
 
-**Terminal 1 - Start Facilitator:**
+## Quick Start
+
+### Step 1: Start X402 Service
+
+Start the essential services (Facilitator and Server) to enable the x402 payment protocol:
+
+**Using Scripts:**
 ```bash
+# Start Facilitator
 ./start.sh facilitator
-```
 
-**Terminal 2 - Start Server:**
-```bash
+# Start Server (in a new terminal)
 ./start.sh server
 ```
 
-Services will print supported networks and tokens on startup.
-
-### Step 3: Run Terminal Client
-
-**Terminal 3:**
+**Using Docker:**
 ```bash
-./start.sh client
-# or directly: python client/terminal/main.py
+docker-compose up -d
 ```
 
-The client will:
-1. Automatically request protected resource
-2. Automatically sign and pay upon receiving 402
-3. Download and save image to `protected_image.png`
+### Step 2: Access and Payment via openclaw Agent
 
-**View Result:**
-```bash
-open protected_image.png  # macOS
-# or
-xdg-open protected_image.png  # Linux
-```
+Once the services are running, the **openclaw** agent can automatically detect the `402 Payment Required` challenge, sign the necessary permits, settle  the payment via the facilitator, and retrieve the resource for you.
 
----
+> Ensure the **openclaw** agent has the [openclaw-extension](https://github.com/open-aibank/openclaw-extension) (a suite of tools and skills developed by AIBank to empower AI Agents with financial sovereignty) enabled to handle x402 protocol operations.
 
-## Scenario 2: Web Client + Docker Container
-
-**Best for:** Demo to non-technical users, production deployment
-
-### Step 1: Ensure `.env` is Configured
-
-Refer to "Step 1: Environment Setup".
-
-### Step 2: Start Docker Container
-
-```bash
-docker compose up -d --build
-```
-
-This starts a container with the following services:
-- **Nginx** (port 8080): Hosts client web
-- **Server** (port 8000): Provides protected resources
-- **Facilitator** (port 8001): Handles payments
-
-### Step 3: Open Browser
-
-Visit: **http://localhost:8080**
-
-### Step 4: Connect Wallet and Pay
-
-1. Click **"Connect Wallet"**
-2. Select TronLink wallet
-3. **Ensure wallet is switched to Nile or Shasta testnet**
-4. Click **"Pay now"**
-5. In TronLink:
-   - First time: Approve USDT
-   - Second time: Sign payment permit
-6. Wait for transaction confirmation
-7. View protected image (with request number)
-
-### Step 5: Stop Container
-
-```bash
-docker compose down
-```
-
----
-
-## FAQ
-
-### Q1: "Unsupported network" error
-**A:** client web only supports **Nile** and **Shasta** testnets. Please switch network in TronLink and reconnect wallet.
-
-### Q2: Terminal client error "TRON_PRIVATE_KEY not found"
-**A:** Ensure `.env` file exists in project root and contains `TRON_PRIVATE_KEY=...`.
-
-### Q3: Docker build fails
-**A:** Ensure Docker is running and has sufficient disk space. Try:
-```bash
-docker system prune -a  # Clean cache
-docker compose up -d --build
-```
-
-### Q4: How to view Docker logs?
-**A:** 
-```bash
-docker compose logs -f
-```
-
-### Q5: Image not displayed after payment
-**A:** Check browser console (F12) and Docker logs to confirm:
-- Facilitator successfully verified signature
-- On-chain transfer succeeded
-- Server returned image
-
----
-
-## Project Structure
-
-```
-x402-tron-demo/
-├── requirements.txt          # Python dependencies (unified)
-├── start.sh                  # Unified startup script
-├── .env                      # Environment variables (create yourself)
-├── client/                   # Clients
-│   ├── terminal/             # Terminal client (CLI)
-│   │   ├── main.py
-│   │   └── README.md
-│   └── web/                  # React web client
-├── server/                   # Protected resource server
-│   └── main.py
-├── facilitator/              # Payment processing service
-│   └── main.py
-├── docker-compose.yml        # Docker orchestration
-├── Dockerfile                # Multi-stage build
-└── README.md                 # This file
-```
-
----
-
-## Tech Stack
-
-- **Blockchain**: TRON (Nile/Shasta Testnet)
-- **Protocol**: x402 (HTTP 402 Payment Required)
-- **Backend**: Python + FastAPI + x402-tron SDK
-- **Frontend**: React + TypeScript + TronLink Adapter
-- **Signing**: EIP-712 / TIP-712 (Typed Data)
-- **Container**: Docker + Nginx + Supervisord
-
----
-
-## More Information
-
-- **Architecture**: See `ARCHITECTURE.md`
-- **x402 Protocol**: https://github.com/open-aibank/x402-tron
-- **TRON Docs**: https://developers.tron.network/
+<img src="./assets/openclaw.jpg" alt="openclaw Agent" width="600">
 
 ---
 
 ## License
 
-MIT
+This project is open source under the **MIT License**. See the [LICENSE](LICENSE.md) file for more information.
+
+---
+
+## Additional Documentation
+
+- **System Architecture:** Explore inter-component communication in [ARCHITECTURE.md](ARCHITECTURE.md).
+- **Server Details:** Resource management info in [SERVER.md](SERVER.md).
+- **Facilitator Details:** Payment processing insights in [FACILITATOR.md](FACILITATOR.md).
+- **Client Details:** Instructions for CLI and web demo in [CLIENT.md](CLIENT.md).
