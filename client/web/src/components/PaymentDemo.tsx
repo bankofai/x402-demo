@@ -6,7 +6,7 @@ import { PaymentResult } from './PaymentResult';
 import type { PaymentRequired } from '../types';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000';
-const ENDPOINT = import.meta.env.VITE_ENDPOINT || '/protected';
+const ENDPOINT = import.meta.env.VITE_ENDPOINT || '/protected-nile';
 
 interface PaymentState {
   status: 'idle' | 'loading' | 'payment_required' | 'paying' | 'success' | 'error';

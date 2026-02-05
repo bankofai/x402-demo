@@ -26,7 +26,7 @@ function App() {
         <WalletModalProvider>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/protected" element={<Protected />} />
+            <Route path="/protected-nile" element={<Protected />} />
           </Routes>
         </WalletModalProvider>
       </WalletProvider>

@@ -36,8 +36,8 @@ TRON_PRIVATE_KEY = os.getenv("TRON_PRIVATE_KEY", "")
 CURRENT_NETWORK = NetworkConfig.TRON_NILE
 
 # Server configuration
-RESOURCE_SERVER_URL = os.getenv("SERVER_URL", "https://x402-tron-demo.sunagent.ai")
-ENDPOINT_PATH = "/protected"
+RESOURCE_SERVER_URL = os.getenv("SERVER_URL", "http://localhost:8000")
+ENDPOINT_PATH = "/protected-nile"
 RESOURCE_URL = RESOURCE_SERVER_URL + ENDPOINT_PATH
 HTTP_TIMEOUT_SECONDS = float(os.getenv("HTTP_TIMEOUT_SECONDS", "60"))
 

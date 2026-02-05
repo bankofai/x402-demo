@@ -145,7 +145,7 @@ async def supported():
         ],
         fee=SupportedFee(
             feeTo=facilitator_address,
-            pricing="per_accept"
+            pricing="flat"
         )
     )
 
