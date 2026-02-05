@@ -12,7 +12,7 @@ from x402_tron.server import X402Server
 from x402_tron.fastapi import x402_protected
 from x402_tron.facilitator import FacilitatorClient
 from x402_tron.config import NetworkConfig
-from x402_tron.tokens.registry import TokenRegistry
+from x402_tron.tokens import TokenRegistry
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -26,10 +26,10 @@ logging.basicConfig(
 )
 
 # Set specific loggers to DEBUG for detailed output
-logging.getLogger("x402").setLevel(logging.DEBUG)
-logging.getLogger("x402.server").setLevel(logging.DEBUG)
-logging.getLogger("x402.fastapi").setLevel(logging.DEBUG)
-logging.getLogger("x402.utils").setLevel(logging.DEBUG)
+logging.getLogger("x402_tron").setLevel(logging.DEBUG)
+logging.getLogger("x402_tron.server").setLevel(logging.DEBUG)
+logging.getLogger("x402_tron.fastapi").setLevel(logging.DEBUG)
+logging.getLogger("x402_tron.utils").setLevel(logging.DEBUG)
 logging.getLogger("uvicorn.access").setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
@@ -47,8 +47,15 @@ app.add_middleware(
 )
 
 # Configuration
-PAY_TO_ADDRESS = os.getenv("PAY_TO_ADDRESS") or "TDhj8uX7SVJwvhCUrMaiQHqPgrB6wRb3eG"
-# Hardcoded server configuration
+PAY_TO_ADDRESS = os.getenv("PAY_TO_ADDRESS")
+if not PAY_TO_ADDRESS:
+    raise ValueError("PAY_TO_ADDRESS environment variable is required")
+
+# Network selection - Change this to use different networks
+# Options: NetworkConfig.TRON_MAINNET, NetworkConfig.TRON_NILE, NetworkConfig.TRON_SHASTA
+CURRENT_NETWORK = NetworkConfig.TRON_NILE
+
+# Server configuration
 FACILITATOR_URL = "http://localhost:8001"
 SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 8000
@@ -65,18 +72,26 @@ server = X402Server()
 facilitator = FacilitatorClient(base_url=FACILITATOR_URL)
 server.add_facilitator(facilitator)
 
-print(f"Server Configuration:")
-print("Supported TRON networks:")
-for n, cid in NetworkConfig.CHAIN_IDS.items():
-    print(f"  - {n} (chainId={cid})")
-    tokens = TokenRegistry.get_network_tokens(n)
-    if tokens:
-        print("    Tokens:")
-        for sym, info in tokens.items():
-            print(f"      - {sym}: {info.address} (decimals={info.decimals})")
-print(f"  Network: {NetworkConfig.TRON_NILE}")
-print(f"  Pay To: {PAY_TO_ADDRESS}")
-print(f"  Facilitator URL: {FACILITATOR_URL}")
+print("=" * 80)
+print("X402 Protected Resource Server - Configuration")
+print("=" * 80)
+print(f"Current Network: {CURRENT_NETWORK}")
+print(f"Pay To Address: {PAY_TO_ADDRESS}")
+print(f"Facilitator URL: {FACILITATOR_URL}")
+print(f"PaymentPermit Contract: {NetworkConfig.get_payment_permit_address(CURRENT_NETWORK)}")
+
+registered_networks = sorted(server._mechanisms.keys())
+print(f"\nAll Registered Networks ({len(registered_networks)}):")
+for net in registered_networks:
+    tokens = TokenRegistry.get_network_tokens(net)
+    is_current = " (CURRENT)" if net == CURRENT_NETWORK else ""
+    print(f"  {net}{is_current}:")
+    if not tokens:
+        print("    (no tokens registered)")
+        continue
+    for symbol, info in tokens.items():
+        print(f"    {symbol}: {info.address} (decimals={info.decimals})")
+print("=" * 80)
 
 @app.get("/")
 async def root():
@@ -91,8 +106,10 @@ async def root():
 @app.get("/protected")
 @x402_protected(
     server=server,
-    price="1 USDT",  # 1 USDT = 1000000 (6 decimals)
-    network=NetworkConfig.TRON_NILE,
+    price="0.0001 USDT",  # Price format: "<amount> <token_symbol>"
+                     # Currently only USDT is supported
+                     # Token must be registered in TokenRegistry for the network
+    network=CURRENT_NETWORK,  # Uses the network configured above
     pay_to=PAY_TO_ADDRESS,
 )
 async def protected_endpoint(request: Request):
@@ -110,23 +127,30 @@ async def protected_endpoint(request: Request):
         draw = ImageDraw.Draw(image)
 
         try:
-            font = ImageFont.truetype("DejaVuSans.ttf", 260)
+            font = ImageFont.truetype("DejaVuSans.ttf", 50)
         except Exception:
             font = ImageFont.load_default()
-        text = f"NO. {request_count}"
+        text = f"req: {request_count}"
 
-        margin = 16
-        bbox = draw.textbbox((0, 0), text, font=font)
-        text_w = bbox[2] - bbox[0]
-        text_h = bbox[3] - bbox[1]
-        x = image.width - margin - text_w
-        y = image.height - margin - text_h
+        x = 16
+        y = 16
+        padding = 6
 
+        bbox = draw.textbbox((x, y), text, font=font)
+        bg = (
+            bbox[0] - padding,
+            bbox[1] - padding,
+            bbox[2] + padding,
+            bbox[3] + padding,
+        )
+        draw.rectangle(bg, fill=(0, 0, 0, 160))
         draw.text(
             (x, y),
             text,
-            fill=(255, 0, 0, 255),
+            fill=(255, 255, 0, 255),
             font=font,
+            stroke_width=2,
+            stroke_fill=(0, 0, 0, 255),
         )
 
         buf = io.BytesIO()
@@ -144,8 +168,8 @@ if __name__ == "__main__":
     print(f"Host: {SERVER_HOST}")
     print(f"Port: {SERVER_PORT}")
     print(f"Endpoints:")
-    print(f"  /protected          - Payment only (1 USDT)")
-    print(f"  /protected-with-fee - Payment with fee (2 USDT + 1 USDT fee)")
+    print(f"  /protected          - Payment only (0.0001 USDT)")
+    print(f"  /protected-with-fee - Payment with fee (2 USDT + 0.0001 USDT fee)")
     print("=" * 80 + "\n")
     
     uvicorn.run(

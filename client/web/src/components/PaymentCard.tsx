@@ -18,10 +18,29 @@ const NETWORK_NAMES: Record<string, string> = {
   'tron:nile': 'TRON Nile Testnet',
 };
 
-const TOKEN_NAMES: Record<string, string> = {
-  'TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf': 'USDT',
-  'TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8': 'USDC',
+// Get supported networks from environment variable, default to 'nile'
+const getSupportedNetworks = (): ('nile' | 'shasta' | 'mainnet')[] => {
+  const envNetworks = import.meta.env.VITE_SUPPORTED_NETWORKS;
+  if (!envNetworks) {
+    return ['nile']; // Default to nile if not configured
+  }
+  
+  const networks = envNetworks.split(',').map((n: string) => n.trim());
+  const validNetworks = networks.filter((n: string) => 
+    n === 'nile' || n === 'shasta' || n === 'mainnet'
+  );
+  
+  return validNetworks.length > 0 ? validNetworks : ['nile'];
 };
+
+const SUPPORTED_NETWORKS = getSupportedNetworks();
+
+// Helper function to get token display name from asset address
+function getTokenDisplayName(assetAddress: string): string {
+  // Try to extract token symbol from the payment requirements if available
+  // For now, just show shortened address
+  return `${assetAddress.slice(0, 6)}...${assetAddress.slice(-4)}`;
+}
 
 function detectTronNetworkFromHost(host: string | undefined): 'nile' | 'shasta' | 'mainnet' | 'unknown' {
   if (!host) return 'unknown';
@@ -58,14 +77,14 @@ export function PaymentCard({
     setWalletNetwork(detectTronNetworkFromHost(host));
   }, [connected]);
 
-  const isSupportedNetwork = walletNetwork === 'nile' || walletNetwork === 'shasta';
+  const isSupportedNetwork = SUPPORTED_NETWORKS.includes(walletNetwork as 'nile' | 'shasta' | 'mainnet');
 
   const networkName = useMemo(() => {
     return NETWORK_NAMES[selectedRequirement.network] || selectedRequirement.network;
   }, [selectedRequirement.network]);
 
   const tokenName = useMemo(() => {
-    return TOKEN_NAMES[selectedRequirement.asset] || 'Token';
+    return getTokenDisplayName(selectedRequirement.asset);
   }, [selectedRequirement.asset]);
 
   const formattedAmount = useMemo(() => {
@@ -157,18 +176,18 @@ export function PaymentCard({
   ]);
 
   return (
-    <div className="border border-gray-200 rounded-2xl p-10 bg-white max-w-lg mx-auto">
+    <div className="p-10 mx-auto max-w-lg bg-white rounded-2xl border border-gray-200">
       <h2 className="mb-3 text-3xl font-bold text-center text-gray-900">
         Payment Required
       </h2>
 
-      <p className="mb-8 text-center text-gray-600 text-lg">
+      <p className="mb-8 text-lg text-center text-gray-600">
         Access to protected content. To access this content, please pay{' '}
         <span className="font-semibold text-gray-900">${formattedAmount} {tokenName}</span>.
       </p>
 
       {/* Faucet Link */}
-      <p className="mb-8 text-sm text-center text-gray-500 italic">
+      <p className="mb-8 text-sm italic text-center text-gray-500">
         Need {tokenName}?{' '}
         <a
           href="https://nileex.io/join/getJoinPage"
@@ -191,13 +210,13 @@ export function PaymentCard({
           <WalletActionButton className="w-full btn-secondary" />
 
           {!isSupportedNetwork && (
-            <div className="border border-red-200 bg-red-50 text-red-700 rounded-xl px-4 py-3 text-sm">
+            <div className="px-4 py-3 text-sm text-red-700 bg-red-50 rounded-xl border border-red-200">
               Unsupported network. Please switch TronLink to <b>Nile</b> or <b>Shasta</b>, then reconnect.
             </div>
           )}
 
           {/* Payment Details */}
-          <div className="space-y-4 py-6 border-y border-gray-200">
+          <div className="py-6 space-y-4 border-gray-200 border-y">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Wallet</span>
               <span className="font-mono text-sm text-gray-900">
@@ -224,7 +243,7 @@ export function PaymentCard({
           <button
             onClick={handlePay}
             disabled={isPaying || !isSupportedNetwork}
-            className="w-full btn-primary text-lg"
+            className="w-full text-lg btn-primary"
           >
             {isPaying ? 'Processing...' : 'Pay now'}
           </button>
@@ -234,7 +253,7 @@ export function PaymentCard({
       {/* Payment Options (if multiple) */}
       {paymentRequired.accepts.length > 1 && (
         <div className="pt-6 mt-6 border-t border-gray-200">
-          <p className="mb-3 text-sm text-gray-500 uppercase tracking-wide">Payment options</p>
+          <p className="mb-3 text-sm tracking-wide text-gray-500 uppercase">Payment options</p>
           <div className="space-y-2">
             {paymentRequired.accepts.map((req, index) => (
               <button
@@ -246,7 +265,7 @@ export function PaymentCard({
                     : 'bg-gray-50 hover:bg-gray-100 text-gray-900'
                 }`}
               >
-                {NETWORK_NAMES[req.network] || req.network} - {TOKEN_NAMES[req.asset] || 'Token'}
+                {NETWORK_NAMES[req.network] || req.network} - {getTokenDisplayName(req.asset)}
               </button>
             ))}
           </div>
