@@ -40,6 +40,7 @@ Though the implementation relies on standard Python services, the demo is design
 - **Implementation:**
   - Validates signed payment permits (TIP-712).
   - Settles micropayments using the TRON Nile Testnet.
+- **Deployment:** Can be self-hosted (using this repository) or provided by an official service (*official address coming soon*).
 
 ### **Client: Resource Requester**
 - **CLI Client:** Automates permit signing and resource retrieval workflows.

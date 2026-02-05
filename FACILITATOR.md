@@ -4,6 +4,12 @@
 
 The **Facilitator Module** handles payment validation and transaction settlement within the X402-Tron Demo. It acts as a trusted intermediary between the Resource Server and the TRON blockchain.
 
+### Deployment Options
+Developers have two choices for integrating a Facilitator:
+1. **Custom Facilitator:** You can build and host your own Facilitator using the provided implementation in this repository.
+2. **Official Facilitator:** Use the official X402 Facilitator service for managed settlement.
+   - **Official Address:** *Coming soon...*
+
 ---
 
 ## Features
