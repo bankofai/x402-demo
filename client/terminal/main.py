@@ -15,7 +15,7 @@ import logging
 from dotenv import load_dotenv
 from x402_tron.clients import X402Client, X402HttpClient
 from x402_tron.config import NetworkConfig
-from x402_tron.mechanisms.client import UptoTronClientMechanism
+from x402_tron.mechanisms.client import ExactTronClientMechanism
 from x402_tron.signers.client import TronClientSigner
 from x402_tron.tokens import TokenRegistry
 
@@ -61,7 +61,7 @@ async def main():
     print(f"Resource URL: {RESOURCE_URL}")
     print(f"PaymentPermit Contract: {NetworkConfig.get_payment_permit_address(CURRENT_NETWORK)}")
     
-    x402_client = X402Client().register(CURRENT_NETWORK, UptoTronClientMechanism(signer))
+    x402_client = X402Client().register(CURRENT_NETWORK, ExactTronClientMechanism(signer))
     
     print(f"\nSupported Networks and Tokens:")
     for network_name in ["tron:mainnet", "tron:nile", "tron:shasta"]:

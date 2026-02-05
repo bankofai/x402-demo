@@ -15,16 +15,15 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from x402_tron.logging_config import setup_logging
-from x402_tron.mechanisms.facilitator import UptoTronFacilitatorMechanism
+from x402_tron.facilitator import X402Facilitator
+from x402_tron.mechanisms.facilitator import ExactTronFacilitatorMechanism
 from x402_tron.signers.facilitator import TronFacilitatorSigner
 from x402_tron.config import NetworkConfig
 from x402_tron.tokens import TokenRegistry
 from x402_tron.types import (
     PaymentPayload,
     PaymentRequirements,
-    VerifyResponse,
-    SettleResponse,
-    FeeQuoteResponse,
+    SupportedFee,
 )
 from pydantic import BaseModel
 
@@ -56,10 +55,8 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 # Configuration
 TRON_PRIVATE_KEY = os.getenv("TRON_PRIVATE_KEY", "")
 
-# Network selection - Change this to use different networks
-# Options: "mainnet", "nile", "shasta"
-TRON_NETWORK = "nile"
-CURRENT_NETWORK = f"tron:{TRON_NETWORK}"
+# Supported networks
+SUPPORTED_NETWORKS = ["mainnet", "nile"]
 
 # Facilitator configuration
 FACILITATOR_HOST = "0.0.0.0"
@@ -85,72 +82,54 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize facilitator
-facilitator_signer = TronFacilitatorSigner.from_private_key(
+# Get facilitator address from first signer
+first_signer = TronFacilitatorSigner.from_private_key(
     TRON_PRIVATE_KEY,
-    network=TRON_NETWORK,
+    network=SUPPORTED_NETWORKS[0],
 )
-facilitator_address = facilitator_signer.get_address()
-facilitator_mechanism = UptoTronFacilitatorMechanism(
-    facilitator_signer,
-    fee_to=facilitator_address,
-    base_fee=BASE_FEE,
-)
+facilitator_address = first_signer.get_address()
+
+# Initialize X402Facilitator
+facilitator = X402Facilitator()
+
+# Register mechanisms for each network
+for network in SUPPORTED_NETWORKS:
+    signer = TronFacilitatorSigner.from_private_key(
+        TRON_PRIVATE_KEY,
+        network=network,
+    )
+    mechanism = ExactTronFacilitatorMechanism(
+        signer,
+        fee_to=facilitator_address,
+        base_fee=BASE_FEE,
+    )
+    facilitator.register([f"tron:{network}"], mechanism)
 
 print("=" * 80)
 print("X402 Payment Facilitator - Configuration")
 print("=" * 80)
-print(f"Current Network: {CURRENT_NETWORK}")
 print(f"Facilitator Address: {facilitator_address}")
 print(f"Base Fee: {BASE_FEE} (0.0001 USDT)")
-print(f"PaymentPermit Contract: {NetworkConfig.get_payment_permit_address(CURRENT_NETWORK)}")
+print(f"Supported Networks: {', '.join(SUPPORTED_NETWORKS)}")
 
-print(f"\nSupported Networks and Tokens:")
-for network in ["tron:mainnet", "tron:nile", "tron:shasta"]:
-    tokens = TokenRegistry.get_network_tokens(network)
-    is_current = " (CURRENT)" if network == CURRENT_NETWORK else ""
-    print(f"  {network}{is_current}:")
-    if not tokens:
-        print("    (no tokens registered)")
-    else:
+print(f"\nNetwork Details:")
+for network in SUPPORTED_NETWORKS:
+    network_key = f"tron:{network}"
+    print(f"  {network_key}:")
+    print(f"    PaymentPermit: {NetworkConfig.get_payment_permit_address(network_key)}")
+    tokens = TokenRegistry.get_network_tokens(network_key)
+    if tokens:
         for symbol, info in tokens.items():
             print(f"    {symbol}: {info.address} (decimals={info.decimals})")
 print("=" * 80)
 
-
-@app.get("/")
-async def root():
-    """Service info endpoint"""
-    return {
-        "service": "X402 Facilitator",
-        "status": "running",
-        "facilitator_address": facilitator_address,
-        "network": TRON_NETWORK,
-        "base_fee": BASE_FEE,
-    }
-
-
 @app.get("/supported")
-async def supported():
+def supported():
     """Get supported capabilities"""
-    from x402_tron.types import SupportedResponse, SupportedKind, SupportedFee
-    
-    return SupportedResponse(
-        kinds=[
-            SupportedKind(
-                x402Version=1,
-                scheme="exact",
-                network=f"tron:{TRON_NETWORK}"
-            ),
-        ],
-        fee=SupportedFee(
-            feeTo=facilitator_address,
-            pricing="flat"
-        )
-    )
+    return facilitator.supported(fee_to=facilitator_address, pricing="flat")
 
 
-@app.post("/fee/quote", response_model=FeeQuoteResponse)
+@app.post("/fee/quote")
 async def fee_quote(request: FeeQuoteRequest):
     """
     Get fee quote for payment requirements
@@ -162,13 +141,14 @@ async def fee_quote(request: FeeQuoteRequest):
         Fee quote response with fee details
     """
     try:
-        result = await facilitator_mechanism.fee_quote(request.accept)
-        return result
+        return await facilitator.fee_quote(request.accept, request.paymentPermitContext)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/verify", response_model=VerifyResponse)
+@app.post("/verify")
 async def verify(request: VerifyRequest):
     """
     Verify payment payload
@@ -182,8 +162,9 @@ async def verify(request: VerifyRequest):
     import logging
     logger = logging.getLogger(__name__)
     logger.info(f"[VERIFY REQUEST] Payload: {request.paymentPayload.model_dump(by_alias=True)}")
+    
     try:
-        result = await facilitator_mechanism.verify(request.paymentPayload, request.paymentRequirements)
+        result = await facilitator.verify(request.paymentPayload, request.paymentRequirements)
         logger.info(f"[VERIFY RESULT] {result.model_dump(by_alias=True)}")
         return result
     except Exception as e:
@@ -191,7 +172,7 @@ async def verify(request: VerifyRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/settle", response_model=SettleResponse)
+@app.post("/settle")
 async def settle(request: SettleRequest):
     """
     Settle payment on-chain
@@ -203,8 +184,7 @@ async def settle(request: SettleRequest):
         Settlement result with transaction hash
     """
     try:
-        result = await facilitator_mechanism.settle(request.paymentPayload, request.paymentRequirements)
-        return result
+        return await facilitator.settle(request.paymentPayload, request.paymentRequirements)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -217,10 +197,9 @@ def main():
     print(f"Host: {FACILITATOR_HOST}")
     print(f"Port: {FACILITATOR_PORT}")
     print(f"Facilitator Address: {facilitator_address}")
-    print(f"Network: {TRON_NETWORK}")
+    print(f"Supported Networks: {', '.join(SUPPORTED_NETWORKS)}")
     print("=" * 80)
     print("\nEndpoints:")
-    print(f"  GET  http://{FACILITATOR_HOST}:{FACILITATOR_PORT}/")
     print(f"  GET  http://{FACILITATOR_HOST}:{FACILITATOR_PORT}/supported")
     print(f"  POST http://{FACILITATOR_HOST}:{FACILITATOR_PORT}/fee/quote")
     print(f"  POST http://{FACILITATOR_HOST}:{FACILITATOR_PORT}/verify")
