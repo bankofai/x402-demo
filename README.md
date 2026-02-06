@@ -62,6 +62,9 @@ Before running the demo, create a `.env` file in the project root:
 # TRON private key for Facilitator's blockchain interactions.
 TRON_PRIVATE_KEY=<your_tron_private_key>
 
+# TronGrid API key for Facilitator TRON RPC access (required for reliable on-chain reads/writes, especially on `tron:mainnet`). Apply at https://www.trongrid.io/ (create an API key in the TronGrid Dashboard).
+TRON_GRID_API_KEY=<your_trongrid_api_key>
+
 # Payment recipient address for Server.
 PAY_TO_ADDRESS=<server_recipient_tron_address>
 
@@ -70,6 +73,10 @@ SERVER_URL=http://localhost:8000
 FACILITATOR_URL=http://localhost:8001
 HTTP_TIMEOUT_SECONDS=60
 ```
+
+Notes:
+- If you enable `tron:mainnet`, the facilitator relies on TronGrid (or another TRON JSON-RPC endpoint) to build and broadcast transactions.
+- Without a valid `TRON_GRID_API_KEY`, requests may fail with HTTP `429 Too Many Requests` due to rate limiting.
 
 ---
 
