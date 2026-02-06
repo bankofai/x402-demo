@@ -1,6 +1,5 @@
 import os
 import logging
-import time
 import io
 import threading
 from pathlib import Path
@@ -21,8 +20,8 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 # Configure detailed logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 # Set specific loggers to DEBUG for detailed output
@@ -78,7 +77,9 @@ print("=" * 80)
 print(f"Current Network: {CURRENT_NETWORK}")
 print(f"Pay To Address: {PAY_TO_ADDRESS}")
 print(f"Facilitator URL: {FACILITATOR_URL}")
-print(f"PaymentPermit Contract: {NetworkConfig.get_payment_permit_address(CURRENT_NETWORK)}")
+print(
+    f"PaymentPermit Contract: {NetworkConfig.get_payment_permit_address(CURRENT_NETWORK)}"
+)
 
 registered_networks = sorted(server._mechanisms.keys())
 print(f"\nAll Registered Networks ({len(registered_networks)}):")
@@ -93,7 +94,10 @@ for net in registered_networks:
         print(f"    {symbol}: {info.address} (decimals={info.decimals})")
 print("=" * 80)
 
-def generate_protected_image(text: str, text_color: tuple[int, int, int, int] = (255, 255, 0, 255)) -> io.BytesIO:
+
+def generate_protected_image(
+    text: str, text_color: tuple[int, int, int, int] = (255, 255, 0, 255)
+) -> io.BytesIO:
     """Generate a protected image with custom text and color"""
     with Image.open(PROTECTED_IMAGE_PATH) as base:
         image = base.convert("RGBA")
@@ -130,6 +134,7 @@ def generate_protected_image(text: str, text_color: tuple[int, int, int, int] = 
         buf.seek(0)
         return buf
 
+
 @app.get("/")
 async def root():
     """Service info"""
@@ -140,12 +145,13 @@ async def root():
         "facilitator": FACILITATOR_URL,
     }
 
+
 @app.get("/protected-nile")
 @x402_protected(
     server=server,
     price="0.0001 USDT",  # Price format: "<amount> <token_symbol>"
-                     # Currently only USDT is supported
-                     # Token must be registered in TokenRegistry for the network
+    # Currently only USDT is supported
+    # Token must be registered in TokenRegistry for the network
     network=CURRENT_NETWORK,  # Uses the network configured above
     pay_to=PAY_TO_ADDRESS,
 )
@@ -159,8 +165,11 @@ async def protected_endpoint(request: Request):
         _request_count += 1
         request_count = _request_count
 
-    buf = generate_protected_image(f"req: {request_count}", text_color=(255, 255, 0, 255))
+    buf = generate_protected_image(
+        f"req: {request_count}", text_color=(255, 255, 0, 255)
+    )
     return StreamingResponse(buf, media_type="image/png")
+
 
 @app.get("/protected-shasta")
 @x402_protected(
@@ -174,30 +183,57 @@ async def protected_shasta_endpoint(request: Request):
     global _request_count
     if not PROTECTED_IMAGE_PATH.exists():
         return {"error": "Protected image not found"}
-    
-    async with _request_count_lock:
+
+    with _request_count_lock:
         _request_count += 1
         request_count = _request_count
 
-    buf = generate_protected_image(f"shasta req: {request_count}", text_color=(0, 255, 0, 255))
+    buf = generate_protected_image(
+        f"shasta req: {request_count}", text_color=(0, 255, 0, 255)
+    )
     return StreamingResponse(buf, media_type="image/png")
+
+
+@app.get("/protected-mainnet")
+@x402_protected(
+    server=server,
+    price="0.0001 USDT",  # Price format: "<amount> <token_symbol>"
+    network=NetworkConfig.TRON_MAINNET,  # Uses TRON mainnet
+    pay_to=PAY_TO_ADDRESS,
+)
+async def protected_mainnet_endpoint(request: Request):
+    """Serve the protected image (mainnet payment) - generated dynamically"""
+    global _request_count
+    if not PROTECTED_IMAGE_PATH.exists():
+        return {"error": "Protected image not found"}
+
+    with _request_count_lock:
+        _request_count += 1
+        request_count = _request_count
+
+    buf = generate_protected_image(
+        f"mainnet req: {request_count}", text_color=(255, 0, 0, 255)
+    )
+    return StreamingResponse(buf, media_type="image/png")
+
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     print("\n" + "=" * 80)
     print("Starting X402 Protected Resource Server")
     print("=" * 80)
     print(f"Host: {SERVER_HOST}")
     print(f"Port: {SERVER_PORT}")
-    print(f"Endpoints:")
-    print(f"  /protected-nile     - Payment (0.0001 USDT) [Nile testnet]")
-    print(f"  /protected-shasta   - Payment (0.0001 USDT) [Shasta testnet]")
+    print("Endpoints:")
+    print("  /protected-nile     - Payment (0.0001 USDT) [Nile testnet]")
+    print("  /protected-shasta   - Payment (0.0001 USDT) [Shasta testnet]")
+    print("  /protected-mainnet  - Payment (0.0001 USDT) [Mainnet]")
     print("=" * 80 + "\n")
-    
+
     uvicorn.run(
-        app, 
-        host=SERVER_HOST, 
+        app,
+        host=SERVER_HOST,
         port=SERVER_PORT,
         log_level="info",
         access_log=True,
