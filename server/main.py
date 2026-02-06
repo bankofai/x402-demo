@@ -51,11 +51,12 @@ if not PAY_TO_ADDRESS:
     raise ValueError("PAY_TO_ADDRESS environment variable is required")
 
 # Network selection - Change this to use different networks
-# Options: NetworkConfig.TRON_MAINNET, NetworkConfig.TRON_NILE, NetworkConfig.TRON_SHASTA
+# Options: NetworkConfig.TRON_MAINNET, NetworkConfig.TRON_NILE,
+# NetworkConfig.TRON_SHASTA
 CURRENT_NETWORK = NetworkConfig.TRON_NILE
 
 # Server configuration
-FACILITATOR_URL = "http://localhost:8001"
+FACILITATOR_URL = os.getenv("FACILITATOR_URL", "http://localhost:8001")
 SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 8000
 
@@ -77,9 +78,8 @@ print("=" * 80)
 print(f"Current Network: {CURRENT_NETWORK}")
 print(f"Pay To Address: {PAY_TO_ADDRESS}")
 print(f"Facilitator URL: {FACILITATOR_URL}")
-print(
-    f"PaymentPermit Contract: {NetworkConfig.get_payment_permit_address(CURRENT_NETWORK)}"
-)
+permit_address = NetworkConfig.get_payment_permit_address(CURRENT_NETWORK)
+print(f"PaymentPermit Contract: {permit_address}")
 
 registered_networks = sorted(server._mechanisms.keys())
 print(f"\nAll Registered Networks ({len(registered_networks)}):")
