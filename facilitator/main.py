@@ -61,7 +61,10 @@ SUPPORTED_NETWORKS = ["mainnet", "shasta", "nile"]
 # Facilitator configuration
 FACILITATOR_HOST = "0.0.0.0"
 FACILITATOR_PORT = 8001
-BASE_FEE = 100  # 0.0001 USDT (6 decimals) - Fee charged per transaction
+BASE_FEE = {
+    "USDT": 100,       # 0.0001 USDT (6 decimals)
+    "USDD": 100_000_000_000_000,  # 0.0001 USDD (18 decimals)
+}
 
 if not TRON_PRIVATE_KEY:
     raise ValueError("TRON_PRIVATE_KEY environment variable is required")
@@ -109,7 +112,7 @@ print("=" * 80)
 print("X402 Payment Facilitator - Configuration")
 print("=" * 80)
 print(f"Facilitator Address: {facilitator_address}")
-print(f"Base Fee: {BASE_FEE} (0.0001 USDT)")
+print(f"Base Fee: {BASE_FEE}")
 print(f"Supported Networks: {', '.join(SUPPORTED_NETWORKS)}")
 
 print(f"\nNetwork Details:")
