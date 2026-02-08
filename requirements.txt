@@ -2,7 +2,7 @@
 # Install with: pip install -r requirements.txt
 
 # Core x402-tron SDK with TRON and FastAPI support
-x402-tron[tron,fastapi] @ git+https://github.com/open-aibank/x402-tron@v0.1.6#subdirectory=python/x402
+x402-tron[tron,fastapi] @ git+https://github.com/bankofai/x402-tron@v0.1.6#subdirectory=python/x402
 
 # Web framework
 fastapi>=0.104.0

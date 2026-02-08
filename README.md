@@ -104,7 +104,7 @@ docker-compose up -d
 
 Once the services are running, the **openclaw** agent can automatically detect the `402 Payment Required` challenge, sign the necessary permits, settle  the payment via the facilitator, and retrieve the resource for you.
 
-> Ensure the **openclaw** agent has the [openclaw-extension](https://github.com/open-aibank/openclaw-extension) (a suite of tools and skills developed by AIBank to empower AI Agents with financial sovereignty) enabled to handle x402 protocol operations.
+> Ensure the **openclaw** agent has the [openclaw-extension](https://github.com/bankofai/openclaw-extension) (a suite of tools and skills developed by BankOfAI to empower AI Agents with financial sovereignty) enabled to handle x402 protocol operations.
 
 <img src="./assets/openclaw.jpg" alt="openclaw Agent" width="600">
 

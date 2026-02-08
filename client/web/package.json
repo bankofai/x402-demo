@@ -13,7 +13,7 @@
     "@tronweb3/tronwallet-adapter-react-hooks": "^1.1.2",
     "@tronweb3/tronwallet-adapter-react-ui": "^1.1.11",
     "@tronweb3/tronwallet-adapters": "^1.2.17",
-    "@open-aibank/x402-tron": "^0.1.4",
+    "@bankofai/x402-tron": "^0.1.6",
     "ethers": "^6.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

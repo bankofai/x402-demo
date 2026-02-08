@@ -5,7 +5,7 @@ import {
   getChainId,
   getPaymentPermitAddress,
   toEvmHex,
-} from '@open-aibank/x402-tron';
+} from '@bankofai/x402-tron';
 
 /** Delivery kind type */
 type DeliveryKind = 'PAYMENT_ONLY';
