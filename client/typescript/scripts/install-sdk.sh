@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install @bankofai/x402-tron from git branch fix/server_endpoint
+# Install @bankofai/x402-tron from tag v0.2.0
 # npm doesn't support git subdirectory installs, so we clone, build, and link manually.
 
 set -euo pipefail
@@ -7,7 +7,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLIENT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SDK_REPO="https://github.com/bankofai/x402-tron.git"
-SDK_BRANCH="fix/server_endpoint"
+SDK_BRANCH="v0.2.0"
 SDK_SUBDIR="typescript/packages/x402"
 TARGET_DIR="$CLIENT_DIR/node_modules/@bankofai/x402-tron"
 
