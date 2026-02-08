@@ -34,6 +34,9 @@ const SERVER_URL       = process.env.SERVER_URL ?? 'http://localhost:8000';
 const NETWORK          = 'tron:nile';
 const ENDPOINT         = '/protected-nile';
 const TRON_GRID_HOST   = 'https://nile.trongrid.io';
+// const NETWORK          = 'tron:mainnet';
+// const ENDPOINT         = '/protected-mainnet';
+// const TRON_GRID_HOST   = 'https://api.trongrid.io';
 
 if (!TRON_PRIVATE_KEY) {
   console.error('Error: TRON_PRIVATE_KEY not set in .env');

@@ -34,10 +34,12 @@ TRON_PRIVATE_KEY = os.getenv("TRON_PRIVATE_KEY", "")
 # Network selection - Change this to use different networks
 # Options: NetworkConfig.TRON_MAINNET, NetworkConfig.TRON_NILE, NetworkConfig.TRON_SHASTA
 CURRENT_NETWORK = NetworkConfig.TRON_NILE
+# CURRENT_NETWORK = NetworkConfig.TRON_MAINNET
 
 # Server configuration
 RESOURCE_SERVER_URL = os.getenv("SERVER_URL", "http://localhost:8000")
 ENDPOINT_PATH = "/protected-nile"
+# ENDPOINT_PATH = "/protected-mainnet"
 RESOURCE_URL = RESOURCE_SERVER_URL + ENDPOINT_PATH
 HTTP_TIMEOUT_SECONDS = float(os.getenv("HTTP_TIMEOUT_SECONDS", "60"))
 
