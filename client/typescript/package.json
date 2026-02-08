@@ -6,10 +6,10 @@
   "private": true,
   "scripts": {
     "start": "tsx src/main.ts",
-    "dev": "tsx watch src/main.ts",
-    "postinstall": "bash scripts/install-sdk.sh"
+    "dev": "tsx watch src/main.ts"
   },
   "dependencies": {
+    "@bankofai/x402-tron": "^0.2.0",
     "dotenv": "^16.3.1",
     "tronweb": "^6.0.0"
   },
