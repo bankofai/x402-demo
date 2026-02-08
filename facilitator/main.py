@@ -42,7 +42,7 @@ class SettleRequest(BaseModel):
 
 class FeeQuoteRequest(BaseModel):
     """Fee quote request model"""
-    accept: PaymentRequirements
+    accepts: list[PaymentRequirements]
     paymentPermitContext: dict | None = None
 
 # Setup logging
@@ -144,7 +144,7 @@ async def fee_quote(request: FeeQuoteRequest):
         Fee quote response with fee details
     """
     try:
-        return await facilitator.fee_quote(request.accept, request.paymentPermitContext)
+        return await facilitator.fee_quote(request.accepts, request.paymentPermitContext)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
