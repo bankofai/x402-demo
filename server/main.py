@@ -70,7 +70,7 @@ _request_count = 0
 server = X402Server()
 # Add facilitator
 facilitator = FacilitatorClient(base_url=FACILITATOR_URL)
-server.add_facilitator(facilitator)
+server.set_facilitator(facilitator)
 
 print("=" * 80)
 print("X402 Protected Resource Server - Configuration")
@@ -149,7 +149,7 @@ async def root():
 @app.get("/protected-nile")
 @x402_protected(
     server=server,
-    price="0.0001 USDT",  # Price format: "<amount> <token_symbol>"
+    prices=["0.0001 USDT", "0.0001 USDD"],  # Price format: "<amount> <token_symbol>"
     # Currently only USDT is supported
     # Token must be registered in TokenRegistry for the network
     network=CURRENT_NETWORK,  # Uses the network configured above
@@ -174,7 +174,7 @@ async def protected_endpoint(request: Request):
 @app.get("/protected-shasta")
 @x402_protected(
     server=server,
-    price="0.0001 USDT",  # Price format: "<amount> <token_symbol>"
+    prices=["0.0001 USDT"],  # Price format: "<amount> <token_symbol>"
     network=NetworkConfig.TRON_SHASTA,  # Uses TRON shasta testnet
     pay_to=PAY_TO_ADDRESS,
 )
@@ -197,7 +197,7 @@ async def protected_shasta_endpoint(request: Request):
 @app.get("/protected-mainnet")
 @x402_protected(
     server=server,
-    price="0.0001 USDT",  # Price format: "<amount> <token_symbol>"
+    prices=["0.0001 USDT"],  # Price format: "<amount> <token_symbol>"
     network=NetworkConfig.TRON_MAINNET,  # Uses TRON mainnet
     pay_to=PAY_TO_ADDRESS,
 )
