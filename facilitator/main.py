@@ -71,7 +71,6 @@ TRON_BASE_FEE = {
 BSC_BASE_FEE = {
     "USDT": 100_000_000_000_000,      # 0.0001 USDT (18 decimals on BSC testnet)
     "USDC": 100_000_000_000_000,      # 0.0001 USDC (18 decimals on BSC testnet)
-    "DHLU": 100,  # 0.0001 DHLU (6 decimals on BSC testnet)
 }
 BSC_MAINNET_BASE_FEE = {
     "EPS": 100_000_000_000_000,       # 0.0001 EPS (18 decimals on BSC mainnet)
@@ -99,12 +98,6 @@ app.add_middleware(
 )
 
 # Get facilitator addresses
-tron_signer = TronFacilitatorSigner.from_private_key(
-    TRON_PRIVATE_KEY,
-    network=TRON_NETWORKS[0],
-)
-tron_facilitator_address = tron_signer.get_address()
-
 bsc_signer = EvmFacilitatorSigner.from_private_key(
     BSC_PRIVATE_KEY,
     network=NetworkConfig.BSC_TESTNET,
@@ -122,7 +115,6 @@ for network in TRON_NETWORKS:
     )
     mechanism = ExactTronFacilitatorMechanism(
         signer,
-        fee_to=tron_facilitator_address,
         base_fee=TRON_BASE_FEE,
     )
     facilitator.register([f"tron:{network}"], mechanism)
@@ -162,7 +154,6 @@ facilitator.register([NetworkConfig.BSC_MAINNET], bsc_mainnet_native_mechanism)
 print("=" * 80)
 print("X402 Payment Facilitator - Configuration")
 print("=" * 80)
-print(f"TRON Facilitator Address: {tron_facilitator_address}")
 print(f"BSC  Facilitator Address: {bsc_facilitator_address}")
 print(f"TRON Base Fee: {TRON_BASE_FEE}")
 print(f"BSC  Base Fee: {BSC_BASE_FEE}")
@@ -183,7 +174,7 @@ print("=" * 80)
 @app.get("/supported")
 def supported():
     """Get supported capabilities"""
-    return facilitator.supported(fee_to=tron_facilitator_address, pricing="flat")
+    return facilitator.supported(pricing="flat")
 
 
 @app.post("/fee/quote")
@@ -253,7 +244,6 @@ def main():
     print("=" * 80)
     print(f"Host: {FACILITATOR_HOST}")
     print(f"Port: {FACILITATOR_PORT}")
-    print(f"TRON Facilitator Address: {tron_facilitator_address}")
     print(f"BSC  Facilitator Address: {bsc_facilitator_address}")
     print(f"Supported Networks: {', '.join(all_networks)}")
     print("=" * 80)

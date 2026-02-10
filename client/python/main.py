@@ -36,15 +36,17 @@ BSC_PRIVATE_KEY = os.getenv("BSC_PRIVATE_KEY", "")
 # Network selection - Change this to use different networks
 # TRON options: NetworkConfig.TRON_MAINNET, NetworkConfig.TRON_NILE, NetworkConfig.TRON_SHASTA
 # EVM options:  NetworkConfig.BSC_TESTNET, NetworkConfig.BSC_MAINNET
-# CURRENT_NETWORK = NetworkConfig.TRON_NILE
+CURRENT_NETWORK = NetworkConfig.TRON_NILE
 # CURRENT_NETWORK = NetworkConfig.TRON_MAINNET
-CURRENT_NETWORK = NetworkConfig.BSC_MAINNET
+# CURRENT_NETWORK = NetworkConfig.BSC_TESTNET
+# CURRENT_NETWORK = NetworkConfig.BSC_MAINNET
 
 # Server configuration
 RESOURCE_SERVER_URL = os.getenv("SERVER_URL", "http://localhost:8000")
-# ENDPOINT_PATH = "/protected-nile"
+ENDPOINT_PATH = "/protected-nile"
 # ENDPOINT_PATH = "/protected-mainnet"
-ENDPOINT_PATH = "/protected-bsc-mainnet"
+# ENDPOINT_PATH = "/protected-bsc-testnet"
+# ENDPOINT_PATH = "/protected-bsc-mainnet"
 RESOURCE_URL = RESOURCE_SERVER_URL + ENDPOINT_PATH
 HTTP_TIMEOUT_SECONDS = float(os.getenv("HTTP_TIMEOUT_SECONDS", "60"))
 
