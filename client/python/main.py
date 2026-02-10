@@ -15,8 +15,9 @@ import logging
 from dotenv import load_dotenv
 from x402_tron.clients import X402Client, X402HttpClient, SufficientBalancePolicy
 from x402_tron.config import NetworkConfig
-from x402_tron.mechanisms.client import ExactTronClientMechanism, ExactEvmClientMechanism
-from x402_tron.mechanisms.native_exact import NativeExactEvmClientMechanism
+from x402_tron.mechanisms.tron.exact import ExactTronClientMechanism
+from x402_tron.mechanisms.evm.exact import ExactEvmClientMechanism
+from x402_tron.mechanisms.evm.native_exact import NativeExactEvmClientMechanism
 from x402_tron.signers.client import TronClientSigner, EvmClientSigner
 from x402_tron.tokens import TokenRegistry
 

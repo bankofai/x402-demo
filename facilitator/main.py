@@ -16,8 +16,9 @@ import uvicorn
 
 from x402_tron.logging_config import setup_logging
 from x402_tron.facilitator import X402Facilitator
-from x402_tron.mechanisms.facilitator import ExactTronFacilitatorMechanism, ExactEvmFacilitatorMechanism
-from x402_tron.mechanisms.native_exact import NativeExactEvmFacilitatorMechanism
+from x402_tron.mechanisms.tron.exact import ExactTronFacilitatorMechanism
+from x402_tron.mechanisms.evm.exact import ExactEvmFacilitatorMechanism
+from x402_tron.mechanisms.evm.native_exact import NativeExactEvmFacilitatorMechanism
 from x402_tron.signers.facilitator import TronFacilitatorSigner, EvmFacilitatorSigner
 from x402_tron.config import NetworkConfig
 from x402_tron.tokens import TokenRegistry

@@ -11,8 +11,8 @@ from x402_tron.server import X402Server
 from x402_tron.fastapi import x402_protected
 from x402_tron.facilitator import FacilitatorClient
 from x402_tron.config import NetworkConfig
-from x402_tron.mechanisms.server import ExactEvmServerMechanism
-from x402_tron.mechanisms.native_exact import NativeExactEvmServerMechanism
+from x402_tron.mechanisms.evm.exact import ExactEvmServerMechanism
+from x402_tron.mechanisms.evm.native_exact import NativeExactEvmServerMechanism
 from x402_tron.tokens import TokenInfo, TokenRegistry
 
 from PIL import Image, ImageDraw, ImageFont
