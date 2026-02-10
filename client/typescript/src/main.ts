@@ -36,9 +36,10 @@ config({ path: resolve(__dirname, '../../../.env') });
 const TRON_PRIVATE_KEY  = process.env.TRON_PRIVATE_KEY ?? '';
 const BSC_PRIVATE_KEY   = process.env.BSC_PRIVATE_KEY ?? '';
 const SERVER_URL       = process.env.SERVER_URL ?? 'http://localhost:8000';
-const NETWORK          = 'eip155:97';
-const ENDPOINT         = '/protected-bsc-testnet';
+const NETWORK          = 'eip155:56';
+const ENDPOINT         = '/protected-bsc-mainnet';
 const BSC_TESTNET_RPC  = 'https://data-seed-prebsc-1-s1.binance.org:8545/';
+const BSC_MAINNET_RPC  = 'https://bsc-dataseed.binance.org/';
 const TRON_GRID_HOST   = 'https://nile.trongrid.io';
 // const NETWORK          = 'tron:mainnet';
 // const ENDPOINT         = '/protected-mainnet';
@@ -85,7 +86,8 @@ async function saveImage(response: Response): Promise<string> {
 async function main(): Promise<void> {
   let signer: TronClientSigner | EvmClientSigner;
   if (isEvmNetwork) {
-    signer = new EvmClientSigner(PRIVATE_KEY, BSC_TESTNET_RPC);
+    const rpcUrl = NETWORK === 'eip155:56' ? BSC_MAINNET_RPC : BSC_TESTNET_RPC;
+    signer = new EvmClientSigner(PRIVATE_KEY, rpcUrl);
   } else {
     const networkName = NETWORK.split(':')[1];
     const tronWeb = new TronWeb({ fullHost: TRON_GRID_HOST, privateKey: PRIVATE_KEY }) as any;

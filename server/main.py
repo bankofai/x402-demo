@@ -13,7 +13,7 @@ from x402_tron.facilitator import FacilitatorClient
 from x402_tron.config import NetworkConfig
 from x402_tron.mechanisms.server import ExactEvmServerMechanism
 from x402_tron.mechanisms.native_exact import NativeExactEvmServerMechanism
-from x402_tron.tokens import TokenRegistry
+from x402_tron.tokens import TokenInfo, TokenRegistry
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -74,6 +74,9 @@ server = X402Server()
 # Register BSC testnet mechanisms
 server.register(NetworkConfig.BSC_TESTNET, ExactEvmServerMechanism())
 server.register(NetworkConfig.BSC_TESTNET, NativeExactEvmServerMechanism())
+# Register BSC mainnet mechanisms
+server.register(NetworkConfig.BSC_MAINNET, ExactEvmServerMechanism())
+server.register(NetworkConfig.BSC_MAINNET, NativeExactEvmServerMechanism())
 # Add facilitator
 facilitator = FacilitatorClient(base_url=FACILITATOR_URL)
 server.set_facilitator(facilitator)
@@ -226,6 +229,30 @@ async def protected_mainnet_endpoint(request: Request):
     return StreamingResponse(buf, media_type="image/png")
 
 
+@app.get("/protected-bsc-mainnet")
+@x402_protected(
+    server=server,
+    prices=["0.0001 EPS"],
+    network=NetworkConfig.BSC_MAINNET,
+    pay_to=BSC_PAY_TO_ADDRESS,
+    schemes=["exact"],
+)
+async def protected_bsc_mainnet_endpoint(request: Request):
+    """Serve the protected image (BSC mainnet payment) - generated dynamically"""
+    global _request_count
+    if not PROTECTED_IMAGE_PATH.exists():
+        return {"error": "Protected image not found"}
+
+    with _request_count_lock:
+        _request_count += 1
+        request_count = _request_count
+
+    buf = generate_protected_image(
+        f"bsc-mainnet req: {request_count}", text_color=(255, 165, 0, 255)
+    )
+    return StreamingResponse(buf, media_type="image/png")
+
+
 @app.get("/protected-bsc-testnet")
 @x402_protected(
     server=server,
@@ -262,7 +289,8 @@ if __name__ == "__main__":
     print("  /protected-nile         - Payment (0.0001 USDT) [Nile testnet]")
     print("  /protected-shasta       - Payment (0.0001 USDT) [Shasta testnet]")
     print("  /protected-mainnet      - Payment (0.0001 USDT) [Mainnet]")
-    print("  /protected-bsc-testnet  - Payment (0.0001 USDC exact, 0.0001 DHLU native_exact) [BSC Testnet]")
+    print("  /protected-bsc-mainnet  - Payment (0.0001 EPS exact) [BSC Mainnet]")
+    print("  /protected-bsc-testnet  - Payment (0.0001 DHLU native_exact) [BSC Testnet]")
     print("=" * 80 + "\n")
 
     uvicorn.run(

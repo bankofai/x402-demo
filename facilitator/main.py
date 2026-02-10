@@ -73,6 +73,9 @@ BSC_BASE_FEE = {
     "USDC": 100_000_000_000_000,      # 0.0001 USDC (18 decimals on BSC testnet)
     "DHLU": 100,  # 0.0001 DHLU (6 decimals on BSC testnet)
 }
+BSC_MAINNET_BASE_FEE = {
+    "EPS": 100_000_000_000_000,       # 0.0001 EPS (18 decimals on BSC mainnet)
+}
 
 if not TRON_PRIVATE_KEY:
     raise ValueError("TRON_PRIVATE_KEY environment variable is required")
@@ -137,6 +140,25 @@ bsc_native_mechanism = NativeExactEvmFacilitatorMechanism(
 )
 facilitator.register([NetworkConfig.BSC_TESTNET], bsc_native_mechanism)
 
+# Register BSC mainnet mechanisms (exact + native_exact)
+bsc_mainnet_signer = EvmFacilitatorSigner.from_private_key(
+    BSC_PRIVATE_KEY,
+    network=NetworkConfig.BSC_MAINNET,
+)
+bsc_mainnet_facilitator_address = bsc_mainnet_signer.get_address()
+
+bsc_mainnet_exact_mechanism = ExactEvmFacilitatorMechanism(
+    bsc_mainnet_signer,
+    fee_to=bsc_mainnet_facilitator_address,
+    base_fee=BSC_MAINNET_BASE_FEE,
+)
+facilitator.register([NetworkConfig.BSC_MAINNET], bsc_mainnet_exact_mechanism)
+
+bsc_mainnet_native_mechanism = NativeExactEvmFacilitatorMechanism(
+    bsc_mainnet_signer,
+)
+facilitator.register([NetworkConfig.BSC_MAINNET], bsc_mainnet_native_mechanism)
+
 print("=" * 80)
 print("X402 Payment Facilitator - Configuration")
 print("=" * 80)
@@ -145,7 +167,7 @@ print(f"BSC  Facilitator Address: {bsc_facilitator_address}")
 print(f"TRON Base Fee: {TRON_BASE_FEE}")
 print(f"BSC  Base Fee: {BSC_BASE_FEE}")
 
-all_networks = [f"tron:{n}" for n in TRON_NETWORKS] + [NetworkConfig.BSC_TESTNET]
+all_networks = [f"tron:{n}" for n in TRON_NETWORKS] + [NetworkConfig.BSC_MAINNET, NetworkConfig.BSC_TESTNET]
 print(f"Supported Networks: {', '.join(all_networks)}")
 
 print(f"\nNetwork Details:")
