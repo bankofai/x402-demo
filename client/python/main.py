@@ -17,7 +17,7 @@ from x402_tron.clients import X402Client, X402HttpClient, SufficientBalancePolic
 from x402_tron.config import NetworkConfig
 from x402_tron.mechanisms.tron.exact_permit import ExactPermitTronClientMechanism
 from x402_tron.mechanisms.evm.exact_permit import ExactPermitEvmClientMechanism
-from x402_tron.mechanisms.evm.native_exact import NativeExactEvmClientMechanism
+from x402_tron.mechanisms.evm.exact import ExactEvmClientMechanism
 from x402_tron.signers.client import TronClientSigner, EvmClientSigner
 from x402_tron.tokens import TokenRegistry
 
@@ -78,7 +78,7 @@ async def main():
     elif CURRENT_NETWORK.startswith("eip155:"):
         signer = EvmClientSigner.from_private_key(BSC_PRIVATE_KEY, network=CURRENT_NETWORK)
         x402_client.register(CURRENT_NETWORK, ExactPermitEvmClientMechanism(signer))
-        x402_client.register(CURRENT_NETWORK, NativeExactEvmClientMechanism(signer))
+        x402_client.register(CURRENT_NETWORK, ExactEvmClientMechanism(signer))
     else:
         print(f"\n❌ Error: Unsupported network: {CURRENT_NETWORK}")
         exit(1)

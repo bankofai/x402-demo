@@ -18,7 +18,7 @@ from x402_tron.logging_config import setup_logging
 from x402_tron.facilitator import X402Facilitator
 from x402_tron.mechanisms.tron.exact_permit import ExactPermitTronFacilitatorMechanism
 from x402_tron.mechanisms.evm.exact_permit import ExactPermitEvmFacilitatorMechanism
-from x402_tron.mechanisms.evm.native_exact import NativeExactEvmFacilitatorMechanism
+from x402_tron.mechanisms.evm.exact import ExactEvmFacilitatorMechanism
 from x402_tron.signers.facilitator import TronFacilitatorSigner, EvmFacilitatorSigner
 from x402_tron.config import NetworkConfig
 from x402_tron.tokens import TokenRegistry
@@ -120,7 +120,7 @@ for network in TRON_NETWORKS:
     )
     facilitator.register([f"tron:{network}"], mechanism)
 
-# Register BSC testnet mechanisms (exact + native_exact)
+# Register BSC testnet mechanisms (exact + exact)
 bsc_exact_mechanism = ExactPermitEvmFacilitatorMechanism(
     bsc_signer,
     fee_to=bsc_facilitator_address,
@@ -128,12 +128,12 @@ bsc_exact_mechanism = ExactPermitEvmFacilitatorMechanism(
 )
 facilitator.register([NetworkConfig.BSC_TESTNET], bsc_exact_mechanism)
 
-bsc_native_mechanism = NativeExactEvmFacilitatorMechanism(
+bsc_native_mechanism = ExactEvmFacilitatorMechanism(
     bsc_signer,
 )
 facilitator.register([NetworkConfig.BSC_TESTNET], bsc_native_mechanism)
 
-# Register BSC mainnet mechanisms (exact + native_exact)
+# Register BSC mainnet mechanisms (exact + exact)
 bsc_mainnet_signer = EvmFacilitatorSigner.from_private_key(
     BSC_PRIVATE_KEY,
     network=NetworkConfig.BSC_MAINNET,
@@ -147,7 +147,7 @@ bsc_mainnet_exact_mechanism = ExactPermitEvmFacilitatorMechanism(
 )
 facilitator.register([NetworkConfig.BSC_MAINNET], bsc_mainnet_exact_mechanism)
 
-bsc_mainnet_native_mechanism = NativeExactEvmFacilitatorMechanism(
+bsc_mainnet_native_mechanism = ExactEvmFacilitatorMechanism(
     bsc_mainnet_signer,
 )
 facilitator.register([NetworkConfig.BSC_MAINNET], bsc_mainnet_native_mechanism)

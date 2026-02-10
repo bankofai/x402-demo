@@ -12,7 +12,7 @@ from x402_tron.fastapi import x402_protected
 from x402_tron.facilitator import FacilitatorClient
 from x402_tron.config import NetworkConfig
 from x402_tron.mechanisms.evm.exact_permit import ExactPermitEvmServerMechanism
-from x402_tron.mechanisms.evm.native_exact import NativeExactEvmServerMechanism
+from x402_tron.mechanisms.evm.exact import ExactEvmServerMechanism
 from x402_tron.tokens import TokenInfo, TokenRegistry
 
 from PIL import Image, ImageDraw, ImageFont
@@ -73,10 +73,10 @@ _request_count = 0
 server = X402Server()
 # Register BSC testnet mechanisms
 server.register(NetworkConfig.BSC_TESTNET, ExactPermitEvmServerMechanism())
-server.register(NetworkConfig.BSC_TESTNET, NativeExactEvmServerMechanism())
+server.register(NetworkConfig.BSC_TESTNET, ExactEvmServerMechanism())
 # Register BSC mainnet mechanisms
 server.register(NetworkConfig.BSC_MAINNET, ExactPermitEvmServerMechanism())
-server.register(NetworkConfig.BSC_MAINNET, NativeExactEvmServerMechanism())
+server.register(NetworkConfig.BSC_MAINNET, ExactEvmServerMechanism())
 # Add facilitator
 facilitator = FacilitatorClient(base_url=FACILITATOR_URL)
 server.set_facilitator(facilitator)
@@ -259,7 +259,7 @@ async def protected_bsc_mainnet_endpoint(request: Request):
     prices=["0.0001 DHLU"],
     network=NetworkConfig.BSC_TESTNET,
     pay_to=BSC_PAY_TO_ADDRESS,
-    schemes=["native_exact"],
+    schemes=["exact"],
 )
 async def protected_bsc_testnet_endpoint(request: Request):
     """Serve the protected image (BSC testnet payment) - generated dynamically"""
@@ -290,7 +290,7 @@ if __name__ == "__main__":
     print("  /protected-shasta       - Payment (0.0001 USDT) [Shasta testnet]")
     print("  /protected-mainnet      - Payment (0.0001 USDT) [Mainnet]")
     print("  /protected-bsc-mainnet  - Payment (0.0001 EPS exact_permit) [BSC Mainnet]")
-    print("  /protected-bsc-testnet  - Payment (0.0001 DHLU native_exact) [BSC Testnet]")
+    print("  /protected-bsc-testnet  - Payment (0.0001 DHLU exact) [BSC Testnet]")
     print("=" * 80 + "\n")
 
     uvicorn.run(
