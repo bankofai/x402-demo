@@ -15,8 +15,8 @@ import logging
 from dotenv import load_dotenv
 from x402_tron.clients import X402Client, X402HttpClient, SufficientBalancePolicy
 from x402_tron.config import NetworkConfig
-from x402_tron.mechanisms.tron.exact import ExactTronClientMechanism
-from x402_tron.mechanisms.evm.exact import ExactEvmClientMechanism
+from x402_tron.mechanisms.tron.exact_permit import ExactPermitTronClientMechanism
+from x402_tron.mechanisms.evm.exact_permit import ExactPermitEvmClientMechanism
 from x402_tron.mechanisms.evm.native_exact import NativeExactEvmClientMechanism
 from x402_tron.signers.client import TronClientSigner, EvmClientSigner
 from x402_tron.tokens import TokenRegistry
@@ -73,11 +73,11 @@ async def main():
     if CURRENT_NETWORK.startswith("tron:"):
         network = CURRENT_NETWORK.split(":")[-1]
         signer = TronClientSigner.from_private_key(TRON_PRIVATE_KEY, network=network)
-        x402_client.register(CURRENT_NETWORK, ExactTronClientMechanism(signer))
+        x402_client.register(CURRENT_NETWORK, ExactPermitTronClientMechanism(signer))
         x402_client.register_policy(SufficientBalancePolicy(signer))
     elif CURRENT_NETWORK.startswith("eip155:"):
         signer = EvmClientSigner.from_private_key(BSC_PRIVATE_KEY, network=CURRENT_NETWORK)
-        x402_client.register(CURRENT_NETWORK, ExactEvmClientMechanism(signer))
+        x402_client.register(CURRENT_NETWORK, ExactPermitEvmClientMechanism(signer))
         x402_client.register(CURRENT_NETWORK, NativeExactEvmClientMechanism(signer))
     else:
         print(f"\n❌ Error: Unsupported network: {CURRENT_NETWORK}")

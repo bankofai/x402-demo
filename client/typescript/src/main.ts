@@ -14,8 +14,8 @@ import { TronWeb } from 'tronweb';
 import {
   X402Client,
   X402FetchClient,
-  ExactTronClientMechanism,
-  ExactEvmClientMechanism,
+  ExactPermitTronClientMechanism,
+  ExactPermitEvmClientMechanism,
   NativeExactEvmClientMechanism,
   TronClientSigner,
   EvmClientSigner,
@@ -36,14 +36,14 @@ config({ path: resolve(__dirname, '../../../.env') });
 const TRON_PRIVATE_KEY  = process.env.TRON_PRIVATE_KEY ?? '';
 const BSC_PRIVATE_KEY   = process.env.BSC_PRIVATE_KEY ?? '';
 const SERVER_URL       = process.env.SERVER_URL ?? 'http://localhost:8000';
-const NETWORK          = 'tron:nile';
-const ENDPOINT         = '/protected-nile';
+// const NETWORK          = 'tron:nile';
+// const ENDPOINT         = '/protected-nile';
 // const NETWORK          = 'tron:mainnet';
 // const ENDPOINT         = '/protected-mainnet';
 // const NETWORK          = 'eip155:56';
 // const ENDPOINT         = '/protected-bsc-mainnet';
-// const NETWORK          = 'eip155:97';
-// const ENDPOINT         = '/protected-bsc-testnet';
+const NETWORK          = 'eip155:97';
+const ENDPOINT         = '/protected-bsc-testnet';
 const BSC_TESTNET_RPC  = 'https://data-seed-prebsc-1-s1.binance.org:8545/';
 const BSC_MAINNET_RPC  = 'https://bsc-dataseed.binance.org/';
 const TRON_GRID_HOST   = 'https://nile.trongrid.io';
@@ -109,10 +109,10 @@ async function main(): Promise<void> {
 
   const x402 = new X402Client({ tokenStrategy: new DefaultTokenSelectionStrategy() });
   if (isEvmNetwork) {
-    x402.register('eip155:*', new ExactEvmClientMechanism(signer as EvmClientSigner));
+    x402.register('eip155:*', new ExactPermitEvmClientMechanism(signer as EvmClientSigner));
     x402.register('eip155:*', new NativeExactEvmClientMechanism(signer as EvmClientSigner));
   } else {
-    x402.register('tron:*', new ExactTronClientMechanism(signer as TronClientSigner));
+    x402.register('tron:*', new ExactPermitTronClientMechanism(signer as TronClientSigner));
   }
   x402.registerPolicy(new SufficientBalancePolicy(signer));
 

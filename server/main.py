@@ -11,7 +11,7 @@ from x402_tron.server import X402Server
 from x402_tron.fastapi import x402_protected
 from x402_tron.facilitator import FacilitatorClient
 from x402_tron.config import NetworkConfig
-from x402_tron.mechanisms.evm.exact import ExactEvmServerMechanism
+from x402_tron.mechanisms.evm.exact_permit import ExactPermitEvmServerMechanism
 from x402_tron.mechanisms.evm.native_exact import NativeExactEvmServerMechanism
 from x402_tron.tokens import TokenInfo, TokenRegistry
 
@@ -72,10 +72,10 @@ _request_count = 0
 # Initialize server (TRON mechanisms auto-registered by default)
 server = X402Server()
 # Register BSC testnet mechanisms
-server.register(NetworkConfig.BSC_TESTNET, ExactEvmServerMechanism())
+server.register(NetworkConfig.BSC_TESTNET, ExactPermitEvmServerMechanism())
 server.register(NetworkConfig.BSC_TESTNET, NativeExactEvmServerMechanism())
 # Register BSC mainnet mechanisms
-server.register(NetworkConfig.BSC_MAINNET, ExactEvmServerMechanism())
+server.register(NetworkConfig.BSC_MAINNET, ExactPermitEvmServerMechanism())
 server.register(NetworkConfig.BSC_MAINNET, NativeExactEvmServerMechanism())
 # Add facilitator
 facilitator = FacilitatorClient(base_url=FACILITATOR_URL)
@@ -161,7 +161,7 @@ async def root():
 @x402_protected(
     server=server,
     prices=["0.0001 USDT", "0.0001 USDD"],
-    schemes=["exact", "exact"],
+    schemes=["exact_permit", "exact_permit"],
     network=CURRENT_NETWORK,
     pay_to=PAY_TO_ADDRESS,
 )
@@ -185,7 +185,7 @@ async def protected_endpoint(request: Request):
 @x402_protected(
     server=server,
     prices=["0.0001 USDT"],
-    schemes=["exact"],
+    schemes=["exact_permit"],
     network=NetworkConfig.TRON_SHASTA,
     pay_to=PAY_TO_ADDRESS,
 )
@@ -209,7 +209,7 @@ async def protected_shasta_endpoint(request: Request):
 @x402_protected(
     server=server,
     prices=["0.0001 USDT"],
-    schemes=["exact"],
+    schemes=["exact_permit"],
     network=NetworkConfig.TRON_MAINNET,
     pay_to=PAY_TO_ADDRESS,
 )
@@ -235,7 +235,7 @@ async def protected_mainnet_endpoint(request: Request):
     prices=["0.0001 EPS"],
     network=NetworkConfig.BSC_MAINNET,
     pay_to=BSC_PAY_TO_ADDRESS,
-    schemes=["exact"],
+    schemes=["exact_permit"],
 )
 async def protected_bsc_mainnet_endpoint(request: Request):
     """Serve the protected image (BSC mainnet payment) - generated dynamically"""
@@ -289,7 +289,7 @@ if __name__ == "__main__":
     print("  /protected-nile         - Payment (0.0001 USDT) [Nile testnet]")
     print("  /protected-shasta       - Payment (0.0001 USDT) [Shasta testnet]")
     print("  /protected-mainnet      - Payment (0.0001 USDT) [Mainnet]")
-    print("  /protected-bsc-mainnet  - Payment (0.0001 EPS exact) [BSC Mainnet]")
+    print("  /protected-bsc-mainnet  - Payment (0.0001 EPS exact_permit) [BSC Mainnet]")
     print("  /protected-bsc-testnet  - Payment (0.0001 DHLU native_exact) [BSC Testnet]")
     print("=" * 80 + "\n")
 

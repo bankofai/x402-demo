@@ -16,8 +16,8 @@ import uvicorn
 
 from x402_tron.logging_config import setup_logging
 from x402_tron.facilitator import X402Facilitator
-from x402_tron.mechanisms.tron.exact import ExactTronFacilitatorMechanism
-from x402_tron.mechanisms.evm.exact import ExactEvmFacilitatorMechanism
+from x402_tron.mechanisms.tron.exact_permit import ExactPermitTronFacilitatorMechanism
+from x402_tron.mechanisms.evm.exact_permit import ExactPermitEvmFacilitatorMechanism
 from x402_tron.mechanisms.evm.native_exact import NativeExactEvmFacilitatorMechanism
 from x402_tron.signers.facilitator import TronFacilitatorSigner, EvmFacilitatorSigner
 from x402_tron.config import NetworkConfig
@@ -114,14 +114,14 @@ for network in TRON_NETWORKS:
         TRON_PRIVATE_KEY,
         network=network,
     )
-    mechanism = ExactTronFacilitatorMechanism(
+    mechanism = ExactPermitTronFacilitatorMechanism(
         signer,
         base_fee=TRON_BASE_FEE,
     )
     facilitator.register([f"tron:{network}"], mechanism)
 
 # Register BSC testnet mechanisms (exact + native_exact)
-bsc_exact_mechanism = ExactEvmFacilitatorMechanism(
+bsc_exact_mechanism = ExactPermitEvmFacilitatorMechanism(
     bsc_signer,
     fee_to=bsc_facilitator_address,
     base_fee=BSC_BASE_FEE,
@@ -140,7 +140,7 @@ bsc_mainnet_signer = EvmFacilitatorSigner.from_private_key(
 )
 bsc_mainnet_facilitator_address = bsc_mainnet_signer.get_address()
 
-bsc_mainnet_exact_mechanism = ExactEvmFacilitatorMechanism(
+bsc_mainnet_exact_mechanism = ExactPermitEvmFacilitatorMechanism(
     bsc_mainnet_signer,
     fee_to=bsc_mainnet_facilitator_address,
     base_fee=BSC_MAINNET_BASE_FEE,
