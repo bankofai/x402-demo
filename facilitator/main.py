@@ -99,10 +99,7 @@ app.add_middleware(
 )
 
 # Get facilitator addresses
-bsc_signer = EvmFacilitatorSigner.from_private_key(
-    BSC_PRIVATE_KEY,
-    network=NetworkConfig.BSC_TESTNET,
-)
+bsc_signer = EvmFacilitatorSigner.from_private_key(BSC_PRIVATE_KEY)
 bsc_facilitator_address = bsc_signer.get_address()
 
 # Initialize X402Facilitator
@@ -110,10 +107,7 @@ facilitator = X402Facilitator()
 
 # Register TRON mechanisms
 for network in TRON_NETWORKS:
-    signer = TronFacilitatorSigner.from_private_key(
-        TRON_PRIVATE_KEY,
-        network=network,
-    )
+    signer = TronFacilitatorSigner.from_private_key(TRON_PRIVATE_KEY)
     mechanism = ExactPermitTronFacilitatorMechanism(
         signer,
         base_fee=TRON_BASE_FEE,
@@ -134,10 +128,7 @@ bsc_native_mechanism = ExactEvmFacilitatorMechanism(
 facilitator.register([NetworkConfig.BSC_TESTNET], bsc_native_mechanism)
 
 # Register BSC mainnet mechanisms (exact + exact)
-bsc_mainnet_signer = EvmFacilitatorSigner.from_private_key(
-    BSC_PRIVATE_KEY,
-    network=NetworkConfig.BSC_MAINNET,
-)
+bsc_mainnet_signer = EvmFacilitatorSigner.from_private_key(BSC_PRIVATE_KEY)
 bsc_mainnet_facilitator_address = bsc_mainnet_signer.get_address()
 
 bsc_mainnet_exact_mechanism = ExactPermitEvmFacilitatorMechanism(

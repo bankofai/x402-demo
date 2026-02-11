@@ -1,8 +1,9 @@
 /**
- * X402 TRON Demo - TypeScript Client
+ * X402 Demo - TypeScript Client (Multi-Network)
  *
- * Demonstrates the x402 payment protocol: request a paid resource,
- * automatically sign & settle on-chain, then consume the response.
+ * Registers BOTH TRON and EVM mechanisms by default so the client can
+ * handle 402 responses from any supported chain.  The server decides
+ * which network(s) to accept; the SDK picks the best affordable option.
  */
 
 import { config } from 'dotenv';
@@ -10,7 +11,6 @@ import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { TronWeb } from 'tronweb';
 import {
   X402Client,
   X402FetchClient,
@@ -22,7 +22,6 @@ import {
   DefaultTokenSelectionStrategy,
   SufficientBalancePolicy,
   decodePaymentPayload,
-  getPaymentPermitAddress,
   type SettleResponse,
 } from '@bankofai/x402';
 
@@ -33,28 +32,25 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, '../../../.env') });
 
-const TRON_PRIVATE_KEY  = process.env.TRON_PRIVATE_KEY ?? '';
-const BSC_PRIVATE_KEY   = process.env.BSC_PRIVATE_KEY ?? '';
+const TRON_PRIVATE_KEY = process.env.TRON_PRIVATE_KEY ?? '';
+const BSC_PRIVATE_KEY  = process.env.BSC_PRIVATE_KEY ?? '';
 const SERVER_URL       = process.env.SERVER_URL ?? 'http://localhost:8000';
-// const NETWORK          = 'tron:nile';
+// For TRON mainnet, set TRON_GRID_API_KEY in .env — the signer reads it from env automatically.
+
+// Change ENDPOINT to target a different server resource.
+// The server may return accepts[] spanning multiple networks.
 // const ENDPOINT         = '/protected-nile';
-// const NETWORK          = 'tron:mainnet';
 // const ENDPOINT         = '/protected-mainnet';
-// const NETWORK          = 'eip155:56';
 // const ENDPOINT         = '/protected-bsc-mainnet';
-const NETWORK          = 'eip155:97';
 const ENDPOINT         = '/protected-bsc-testnet';
-const BSC_TESTNET_RPC  = 'https://data-seed-prebsc-1-s1.binance.org:8545/';
-const BSC_MAINNET_RPC  = 'https://bsc-dataseed.binance.org/';
-const TRON_GRID_HOST   = 'https://nile.trongrid.io';
-// const TRON_GRID_HOST   = 'https://api.trongrid.io';
 
-const isEvmNetwork = NETWORK.startsWith('eip155:');
-const PRIVATE_KEY = isEvmNetwork ? BSC_PRIVATE_KEY : TRON_PRIVATE_KEY;
 
-if (!PRIVATE_KEY) {
-  const keyName = isEvmNetwork ? 'BSC_PRIVATE_KEY' : 'TRON_PRIVATE_KEY';
-  console.error(`Error: ${keyName} not set in .env`);
+if (!TRON_PRIVATE_KEY) {
+  console.error('Error: TRON_PRIVATE_KEY not set in .env');
+  process.exit(1);
+}
+if (!BSC_PRIVATE_KEY) {
+  console.error('Error: BSC_PRIVATE_KEY not set in .env');
   process.exit(1);
 }
 
@@ -88,33 +84,26 @@ async function saveImage(response: Response): Promise<string> {
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
-  let signer: TronClientSigner | EvmClientSigner;
-  if (isEvmNetwork) {
-    const rpcUrl = NETWORK === 'eip155:56' ? BSC_MAINNET_RPC : BSC_TESTNET_RPC;
-    signer = new EvmClientSigner(PRIVATE_KEY, rpcUrl);
-  } else {
-    const networkName = NETWORK.split(':')[1];
-    const tronWeb = new TronWeb({ fullHost: TRON_GRID_HOST, privateKey: PRIVATE_KEY }) as any;
-    signer = TronClientSigner.withPrivateKey(tronWeb, PRIVATE_KEY, networkName as any);
-  }
+  // --- Create signers for every chain family ---
+  const tronSigner = new TronClientSigner(TRON_PRIVATE_KEY);
+  const evmSigner  = new EvmClientSigner(BSC_PRIVATE_KEY);
 
   hr();
-  console.log('X402 Client (TypeScript)');
+  console.log('X402 Client (TypeScript · Multi-Network)');
   hr();
-  console.log(`  Network  : ${NETWORK}`);
-  console.log(`  Address  : ${signer.getAddress()}`);
-  console.log(`  Permit   : ${getPaymentPermitAddress(NETWORK)}`);
-  console.log(`  Resource : ${SERVER_URL}${ENDPOINT}`);
+  console.log(`  TRON Address : ${tronSigner.getAddress()}`);
+  console.log(`  EVM  Address : ${evmSigner.getAddress()}`);
+  console.log(`  Resource     : ${SERVER_URL}${ENDPOINT}`);
   hr();
 
+  // --- Register mechanisms for ALL networks ---
   const x402 = new X402Client({ tokenStrategy: new DefaultTokenSelectionStrategy() });
-  if (isEvmNetwork) {
-    x402.register('eip155:*', new ExactPermitEvmClientMechanism(signer as EvmClientSigner));
-    x402.register('eip155:*', new ExactEvmClientMechanism(signer as EvmClientSigner));
-  } else {
-    x402.register('tron:*', new ExactPermitTronClientMechanism(signer as TronClientSigner));
-  }
-  x402.registerPolicy(new SufficientBalancePolicy(signer));
+  x402.register('tron:*',   new ExactPermitTronClientMechanism(tronSigner));
+  x402.register('eip155:*', new ExactPermitEvmClientMechanism(evmSigner));
+  x402.register('eip155:*', new ExactEvmClientMechanism(evmSigner));
+
+  // Balance policy: auto-resolves signers from registered mechanisms
+  x402.registerPolicy(SufficientBalancePolicy);
 
   const client = new X402FetchClient(x402);
 

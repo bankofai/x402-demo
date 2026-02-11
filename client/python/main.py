@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-X402 TRON Demo - Terminal Client
-A command-line client that demonstrates x402 payment protocol with TRON.
+X402 Demo - Terminal Client (Multi-Network)
+
+Registers BOTH TRON and EVM mechanisms by default so the client can
+handle 402 responses from any supported chain.  The server decides
+which network(s) to accept; the SDK picks the best affordable option.
 """
 
 import asyncio
@@ -14,7 +17,6 @@ import httpx
 import logging
 from dotenv import load_dotenv
 from bankofai.x402.clients import X402Client, X402HttpClient, SufficientBalancePolicy
-from bankofai.x402.config import NetworkConfig
 from bankofai.x402.mechanisms.tron.exact_permit import ExactPermitTronClientMechanism
 from bankofai.x402.mechanisms.evm.exact_permit import ExactPermitEvmClientMechanism
 from bankofai.x402.mechanisms.evm.exact import ExactEvmClientMechanism
@@ -34,15 +36,9 @@ load_dotenv()
 TRON_PRIVATE_KEY = os.getenv("TRON_PRIVATE_KEY", "")
 BSC_PRIVATE_KEY = os.getenv("BSC_PRIVATE_KEY", "")
 
-# Network selection - Change this to use different networks
-# TRON options: NetworkConfig.TRON_MAINNET, NetworkConfig.TRON_NILE, NetworkConfig.TRON_SHASTA
-# EVM options:  NetworkConfig.BSC_TESTNET, NetworkConfig.BSC_MAINNET
-CURRENT_NETWORK = NetworkConfig.TRON_NILE
-# CURRENT_NETWORK = NetworkConfig.TRON_MAINNET
-# CURRENT_NETWORK = NetworkConfig.BSC_TESTNET
-# CURRENT_NETWORK = NetworkConfig.BSC_MAINNET
-
 # Server configuration
+# Change ENDPOINT_PATH to target a different server resource.
+# The server may return accepts[] spanning multiple networks.
 RESOURCE_SERVER_URL = os.getenv("SERVER_URL", "http://localhost:8000")
 ENDPOINT_PATH = "/protected-nile"
 # ENDPOINT_PATH = "/protected-mainnet"
@@ -57,42 +53,37 @@ if not TRON_PRIVATE_KEY:
     print("\nPlease add your TRON private key to .env file\n")
     exit(1)
 
-if CURRENT_NETWORK.startswith("eip155:") and not BSC_PRIVATE_KEY:
+if not BSC_PRIVATE_KEY:
     print("\n❌ Error: BSC_PRIVATE_KEY not set in .env file")
     print("\nPlease add your EVM private key to .env file\n")
     exit(1)
 
 async def main():
     print("=" * 80)
-    print("X402 Payment Client - Configuration")
+    print("X402 Payment Client (Multi-Network)")
     print("=" * 80)
 
-    # Setup client based on network type
+    # --- Create signers for every chain family ---
+    tron_signer = TronClientSigner.from_private_key(TRON_PRIVATE_KEY)
+    evm_signer = EvmClientSigner.from_private_key(BSC_PRIVATE_KEY)
+
+    # --- Register mechanisms for ALL networks ---
     x402_client = X402Client()
+    x402_client.register("tron:*", ExactPermitTronClientMechanism(tron_signer))
+    x402_client.register("eip155:*", ExactPermitEvmClientMechanism(evm_signer))
+    x402_client.register("eip155:*", ExactEvmClientMechanism(evm_signer))
 
-    if CURRENT_NETWORK.startswith("tron:"):
-        network = CURRENT_NETWORK.split(":")[-1]
-        signer = TronClientSigner.from_private_key(TRON_PRIVATE_KEY, network=network)
-        x402_client.register(CURRENT_NETWORK, ExactPermitTronClientMechanism(signer))
-        x402_client.register_policy(SufficientBalancePolicy(signer))
-    elif CURRENT_NETWORK.startswith("eip155:"):
-        signer = EvmClientSigner.from_private_key(BSC_PRIVATE_KEY, network=CURRENT_NETWORK)
-        x402_client.register(CURRENT_NETWORK, ExactPermitEvmClientMechanism(signer))
-        x402_client.register(CURRENT_NETWORK, ExactEvmClientMechanism(signer))
-    else:
-        print(f"\n❌ Error: Unsupported network: {CURRENT_NETWORK}")
-        exit(1)
+    # Balance policy: auto-resolves signers from registered mechanisms
+    x402_client.register_policy(SufficientBalancePolicy)
 
-    print(f"Current Network: {CURRENT_NETWORK}")
-    print(f"Client Address: {signer.get_address()}")
+    print(f"TRON Address: {tron_signer.get_address()}")
+    print(f"EVM  Address: {evm_signer.get_address()}")
     print(f"Resource URL: {RESOURCE_URL}")
-    print(f"PaymentPermit Contract: {NetworkConfig.get_payment_permit_address(CURRENT_NETWORK)}")
 
     print(f"\nSupported Networks and Tokens:")
     for network_name in ["tron:mainnet", "tron:nile", "tron:shasta", "eip155:97"]:
         tokens = TokenRegistry.get_network_tokens(network_name)
-        is_current = " (CURRENT)" if network_name == CURRENT_NETWORK else ""
-        print(f"  {network_name}{is_current}:")
+        print(f"  {network_name}:")
         if not tokens:
             print("    (no tokens registered)")
         else:
