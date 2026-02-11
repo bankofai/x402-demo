@@ -214,8 +214,8 @@ async def protected_shasta_endpoint(request: Request):
 @app.get("/protected-mainnet")
 @x402_protected(
     server=server,
-    prices=["0.0001 USDT"],
-    schemes=["exact_permit"],
+    prices=["0.0001 USDT", "0.0001 USDD"],
+    schemes=["exact_permit", "exact_permit"],
     network=NetworkConfig.TRON_MAINNET,
     pay_to=PAY_TO_ADDRESS,
 )
@@ -238,10 +238,10 @@ async def protected_mainnet_endpoint(request: Request):
 @app.get("/protected-bsc-mainnet")
 @x402_protected(
     server=server,
-    prices=["0.0001 EPS"],
+    prices=["0.0001 USDC", "0.0001 USDT", "0.0001 EPS"],
     network=NetworkConfig.BSC_MAINNET,
     pay_to=BSC_PAY_TO_ADDRESS,
-    schemes=["exact_permit"],
+    schemes=["exact_permit", "exact_permit", "exact_permit"],
 )
 async def protected_bsc_mainnet_endpoint(request: Request):
     """Serve the protected image (BSC mainnet payment) - generated dynamically"""
@@ -262,10 +262,10 @@ async def protected_bsc_mainnet_endpoint(request: Request):
 @app.get("/protected-bsc-testnet")
 @x402_protected(
     server=server,
-    prices=["0.0001 DHLU"],
+    prices=["0.0001 USDT", "0.0001 USDC", "0.0001 DHLU"],
     network=NetworkConfig.BSC_TESTNET,
     pay_to=BSC_PAY_TO_ADDRESS,
-    schemes=["exact"],
+    schemes=["exact_permit", "exact_permit", "exact"],
 )
 async def protected_bsc_testnet_endpoint(request: Request):
     """Serve the protected image (BSC testnet payment) - generated dynamically"""
@@ -294,9 +294,9 @@ if __name__ == "__main__":
     print("Endpoints:")
     print("  /protected-nile         - Payment (0.0001 USDT) [Nile testnet]")
     print("  /protected-shasta       - Payment (0.0001 USDT) [Shasta testnet]")
-    print("  /protected-mainnet      - Payment (0.0001 USDT) [Mainnet]")
-    print("  /protected-bsc-mainnet  - Payment (0.0001 EPS exact_permit) [BSC Mainnet]")
-    print("  /protected-bsc-testnet  - Payment (0.0001 DHLU exact) [BSC Testnet]")
+    print("  /protected-mainnet      - Payment (0.0001 USDT/USDD) [Mainnet]")
+    print("  /protected-bsc-mainnet  - Payment (0.0001 USDC/USDT/EPS) [BSC Mainnet]")
+    print("  /protected-bsc-testnet  - Payment (0.0001 USDT/USDC/DHLU) [BSC Testnet]")
     print("=" * 80 + "\n")
 
     uvicorn.run(
