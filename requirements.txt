@@ -2,7 +2,7 @@
 # Install with: pip install -r requirements.txt
 
 # Core bankofai-x402 SDK with TRON and FastAPI support (GitHub master branch)
-bankofai-x402[tron,fastapi] @ git+https://github.com/bankofai/x402.git@main#subdirectory=python/x402
+bankofai-x402[tron,fastapi] @ git+https://github.com/bankofai/x402.git@v0.3.1#subdirectory=python/x402
 
 # Web framework
 fastapi>=0.104.0

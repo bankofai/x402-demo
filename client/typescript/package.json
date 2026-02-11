@@ -9,7 +9,7 @@
     "dev": "tsx watch src/main.ts"
   },
   "dependencies": {
-    "@bankofai/x402": "0.3.0",
+    "@bankofai/x402": "0.3.1",
     "dotenv": "^16.3.1",
     "tronweb": "^6.0.0",
     "viem": "^2.45.2"
