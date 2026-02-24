@@ -43,15 +43,18 @@ log_error()   { echo -e "${RED}[ERROR]${NC} $*"; }
 log_section() { echo -e "\n${BOLD}${CYAN}=== $* ===${NC}"; }
 
 # --------------------------------------------------------------------------
-# 读取配置（支持 .env 文件）
+# 读取配置（共用仓库根目录 .env）
 # --------------------------------------------------------------------------
-ENV_FILE="$DEMO_DIR/.env"
+ROOT_DIR="$(cd "$DEMO_DIR/../.." && pwd)"
+ENV_FILE="$ROOT_DIR/.env"
 if [[ -f "$ENV_FILE" ]]; then
     log_info "加载环境变量: $ENV_FILE"
     set -a
     # shellcheck disable=SC1090
     source "$ENV_FILE"
     set +a
+else
+    log_warn "未找到 $ENV_FILE，请从 .env.sample 复制并填写"
 fi
 
 SERVER_HOST="${SERVER_HOST:-0.0.0.0}"
@@ -77,7 +80,7 @@ log_ok "GOOGLE_API_KEY 已设置"
 if [[ -z "${TRON_PRIVATE_KEY:-}" ]]; then
     log_error "未设置 TRON_PRIVATE_KEY 环境变量（钱包签名所必需）。"
     log_error "请在 $ENV_FILE 中添加 Tron 私钥（64位十六进制，测试网专用）。"
-    log_error "参考: $DEMO_DIR/.env.example"
+    log_error "参考: $ROOT_DIR/.env.sample"
     exit 1
 fi
 export TRON_PRIVATE_KEY
@@ -86,7 +89,7 @@ log_ok "TRON_PRIVATE_KEY 已设置（网络: ${TRON_NETWORK}）"
 if [[ -z "${PAY_TO_ADDRESS:-}" ]]; then
     log_error "未设置 PAY_TO_ADDRESS 环境变量（Merchant 收款地址）。"
     log_error "请在 $ENV_FILE 中添加 Merchant 的 Tron 钱包地址。"
-    log_error "参考: $DEMO_DIR/.env.example"
+    log_error "参考: $ROOT_DIR/.env.sample"
     exit 1
 fi
 export PAY_TO_ADDRESS
@@ -108,14 +111,6 @@ log_section "同步依赖"
 log_info "Running uv sync (directory: $DEMO_DIR)..."
 uv sync --directory="$DEMO_DIR"
 log_ok "Dependency sync complete"
-
-# --------------------------------------------------------------------------
-# 日志文件
-# --------------------------------------------------------------------------
-LOG_DIR="$DEMO_DIR/logs"
-mkdir -p "$LOG_DIR"
-SERVER_LOG="$LOG_DIR/server.log"
-CLIENT_LOG="$LOG_DIR/client.log"
 
 # --------------------------------------------------------------------------
 # 清理函数：Ctrl+C 时优雅退出
@@ -147,12 +142,10 @@ trap cleanup SIGINT SIGTERM
 log_section "启动 Merchant Server"
 log_info "地址: http://${SERVER_HOST}:${SERVER_PORT}"
 log_info "Facilitator: ${FACILITATOR_URL}"
-log_info "日志: $SERVER_LOG"
 
 uv --directory="$DEMO_DIR" run server \
     --host "$SERVER_HOST" \
-    --port "$SERVER_PORT" \
-    > "$SERVER_LOG" 2>&1 &
+    --port "$SERVER_PORT" &
 SERVER_PID=$!
 log_ok "Merchant Server 已启动 (PID: $SERVER_PID)"
 
@@ -161,8 +154,7 @@ log_info "等待 Merchant Server 就绪..."
 WAIT_SECS=0
 until curl -sf "http://localhost:${SERVER_PORT}/agents/merchant_agent/.well-known/agent-card.json" > /dev/null 2>&1; do
     if ! kill -0 "$SERVER_PID" 2>/dev/null; then
-        log_error "Merchant Server 进程意外退出！请查看日志: $SERVER_LOG"
-        cat "$SERVER_LOG"
+        log_error "Merchant Server 进程意外退出！请检查上方输出。"
         exit 1
     fi
     if [[ $WAIT_SECS -ge 20 ]]; then
@@ -181,11 +173,9 @@ fi
 # --------------------------------------------------------------------------
 log_section "启动 Client Agent Web UI"
 log_info "地址: http://localhost:${CLIENT_PORT}"
-log_info "日志: $CLIENT_LOG"
 
 uv --directory="$DEMO_DIR" run adk web \
-    --port "$CLIENT_PORT" \
-    > "$CLIENT_LOG" 2>&1 &
+    --port "$CLIENT_PORT" &
 CLIENT_PID=$!
 log_ok "Client Agent Web UI 已启动 (PID: $CLIENT_PID)"
 
@@ -207,10 +197,7 @@ echo ""
 echo -e "  ${BOLD}钱包配置:${NC}"
 echo -e "  - 网络: ${TRON_NETWORK}"
 echo ""
-echo -e "  ${BOLD}日志文件:${NC}"
-echo -e "  - Server: ${SERVER_LOG}"
-echo -e "  - Client: ${CLIENT_LOG}"
-echo ""
+
 echo -e "  按 ${BOLD}Ctrl+C${NC} 停止所有服务"
 echo ""
 

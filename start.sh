@@ -75,10 +75,10 @@ case "$COMPONENT" in
         export TRON_NETWORK="${TRON_NETWORK:-tron:nile}"
         export FACILITATOR_URL="${FACILITATOR_URL:-https://facilitator.bankofai.io}"
         
-        # Load .env if it exists in a2a dir
-        if [ -f ".env" ]; then
+        # Load root .env if it exists
+        if [ -f "../.env" ]; then
             set -a
-            source .env
+            source ../.env
             set +a
         fi
         
@@ -91,10 +91,10 @@ case "$COMPONENT" in
         cd a2a
         export CLIENT_PORT="${CLIENT_PORT:-8080}"
         
-        # Load .env if it exists in a2a dir
-        if [ -f ".env" ]; then
+        # Load root .env if it exists
+        if [ -f "../.env" ]; then
             set -a
-            source .env
+            source ../.env
             set +a
         fi
         

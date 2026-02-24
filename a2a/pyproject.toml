@@ -23,13 +23,12 @@ build-backend = "hatchling.build"
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["server", "client"]
+packages = ["server", "client_agent"]
 
 [project.scripts]
 server = "server.__main__:main"
 
-[tool.uv.workspace]
-members = ["client"]
+
 
 [tool.uv.sources]
 x402-a2a = { git = "https://github.com/leo8tron/a2a-x402", branch = "feat/x402_tron", subdirectory = "python/x402_a2a" }
