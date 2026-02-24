@@ -17,6 +17,8 @@ if [ -z "$COMPONENT" ]; then
     echo "  facilitator  - Payment facilitator service (Python/FastAPI)"
     echo "  client       - Payment client (Python)"
     echo "  client-ts    - Payment client (TypeScript)"
+    echo "  a2a-server   - A2A Merchant Server"
+    echo "  a2a-client   - A2A Client Agent Web UI"
     exit 1
 fi
 
@@ -63,9 +65,44 @@ case "$COMPONENT" in
         fi
         npm start
         ;;
+    a2a-server)
+        echo "=========================================="
+        echo "Starting A2A Merchant Server"
+        echo "=========================================="
+        cd a2a
+        export SERVER_HOST="${SERVER_HOST:-0.0.0.0}"
+        export SERVER_PORT="${SERVER_PORT:-8000}"
+        export TRON_NETWORK="${TRON_NETWORK:-tron:nile}"
+        export FACILITATOR_URL="${FACILITATOR_URL:-https://facilitator.bankofai.io}"
+        
+        # Load .env if it exists in a2a dir
+        if [ -f ".env" ]; then
+            set -a
+            source .env
+            set +a
+        fi
+        
+        uv run server --host "$SERVER_HOST" --port "$SERVER_PORT"
+        ;;
+    a2a-client)
+        echo "=========================================="
+        echo "Starting A2A Client Agent Web UI"
+        echo "=========================================="
+        cd a2a
+        export CLIENT_PORT="${CLIENT_PORT:-8080}"
+        
+        # Load .env if it exists in a2a dir
+        if [ -f ".env" ]; then
+            set -a
+            source .env
+            set +a
+        fi
+        
+        uv run adk web --port "$CLIENT_PORT"
+        ;;
     *)
         echo "❌ Unknown component: $COMPONENT"
-        echo "Valid: server, facilitator, client, client-ts"
+        echo "Valid: server, facilitator, client, client-ts, a2a-server, a2a-client"
         exit 1
         ;;
 esac
