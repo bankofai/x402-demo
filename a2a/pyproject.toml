@@ -31,7 +31,7 @@ server = "server.__main__:main"
 
 
 [tool.uv.sources]
-x402-a2a = { git = "https://github.com/leo8tron/a2a-x402", branch = "feat/x402_tron", subdirectory = "python/x402_a2a" }
+x402-a2a = { git = "https://github.com/bankofai/a2a-x402", branch = "main", subdirectory = "python/x402_a2a" }
 bankofai-x402 = { git = "https://github.com/bankofai/x402", tag = "v0.3.1", subdirectory = "python/x402" }
 
 [tool.ruff]

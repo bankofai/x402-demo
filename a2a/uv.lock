@@ -61,7 +61,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "uvicorn", specifier = ">=0.34.2" },
     { name = "web3", specifier = ">=7.10.0" },
-    { name = "x402-a2a", git = "https://github.com/leo8tron/a2a-x402?subdirectory=python%2Fx402_a2a&branch=feat%2Fx402_tron" },
+    { name = "x402-a2a", git = "https://github.com/bankofai/a2a-x402?subdirectory=python%2Fx402_a2a&branch=main" },
 ]
 
 [package.metadata.requires-dev]
@@ -2352,7 +2352,7 @@ wheels = [
 [[package]]
 name = "x402-a2a"
 version = "1.0.0"
-source = { git = "https://github.com/leo8tron/a2a-x402?subdirectory=python%2Fx402_a2a&branch=feat%2Fx402_tron#6c466ddc7bac2615dd1be23c3d04acde9c4242ba" }
+source = { git = "https://github.com/bankofai/a2a-x402?subdirectory=python%2Fx402_a2a&branch=main#1ed12acd0957bd258081cd1fb6f4bfab426d5e41" }
 dependencies = [
     { name = "a2a-sdk" },
     { name = "bankofai-x402", extra = ["tron"] },
