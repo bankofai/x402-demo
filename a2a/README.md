@@ -2,6 +2,32 @@
 
 This document provides a high-level overview of the Agent-to-Agent (A2A) and X402 payment protocol integration.
 
+## What runs where
+
+### Client (`a2a/client_agent`)
+
+- **Entry for ADK Web UI**: `client_agent/__init__.py` exports `root_agent`.
+- **Orchestrator**: `client_agent/client.py` implements `ClientAgent`.
+- **Remote connection wrapper**: `RemoteAgentConnection` (inside `client.py`) talks to the Merchant Server via the A2A client.
+- **Local signing**: `client_agent/wallet.py` (`TronLocalWallet`) signs the X402 payment payload using `TRON_PRIVATE_KEY`.
+- **Task state**: `client_agent/task_store.py` stores task + artifact updates so the UI can render progress.
+
+### Server (`a2a/server`)
+
+- **ASGI app**: `server/__main__.py` builds a Starlette app via `A2AStarletteApplication`.
+- **Merchant agent**: `server/merchant.py` defines `MerchantAgent` (LLM agent) and raises `x402PaymentRequiredException` to request payment.
+- **Execution bridge**: `server/executor.py` (`ADKAgentExecutor`) adapts A2A requests into an ADK `Runner` loop.
+- **Payment verification/settlement**: `server/payment.py` (`x402MerchantExecutor`) wraps the executor and calls **Facilitator** for `fee_quote`, `verify`, and `settle`.
+- **Message format conversion**: `server/parts.py` converts between A2A `Part` and `google.genai.types.Part`.
+
+## Environment variables (shared `.env` at repo root)
+
+- `GOOGLE_API_KEY` (or `GOOGLE_GENAI_USE_VERTEXAI=TRUE`): required by the **server** because the Merchant Agent calls the LLM.
+- `PAY_TO_ADDRESS`: required by the **server** (merchant receiving address).
+- `TRON_PRIVATE_KEY`: required by the **client** (to sign payment payload).
+- `TRON_NETWORK` (default `tron:nile`)
+- `FACILITATOR_URL`
+
 ## Conceptual Model
 
 The conceptual model illustrates the main components involved in the A2A interaction.
@@ -19,6 +45,8 @@ graph TD
         MerchantServer[Merchant Server Agent]
         ServiceLogic[Business Logic]
     end
+
+    Gemini[Gemini LLM]
     
     subgraph "Blockchain Infrastructure"
         Facilitator[Payment Facilitator]
@@ -30,6 +58,8 @@ graph TD
     
     ClientAgent <-->|A2A RPC Protocol| MerchantServer
     MerchantServer <--> ServiceLogic
+
+    MerchantServer -->|LLM call| Gemini
     
     MerchantServer -->|Submit Signed Tx / Verify Receipt| Facilitator
     Facilitator <-->|Verify / Settle| Tron
@@ -45,18 +75,19 @@ sequenceDiagram
     participant Client as Client Agent
     participant Server as Merchant Server
     participant Fac as Facilitator
+    participant LLM as Gemini LLM
 
     User->>Client: "I want to buy a banana"
     
     %% Initial Task Request
-    Client->>Server: Create Task (A2A RPC Request)
+    Client->>Server: Send Message (A2A RPC Request)
     activate Server
-    Server-->>Client: 402 Payment Required (X402 Payload)
+    Server-->>Client: Task Status = input_required (x402 requirements)
     deactivate Server
     
     %% Payment Phase
     Note over Client: Client signs transaction<br/>using local private key
-    Client->>Server: Submit Signed Transaction (RPC Request)
+    Client->>Server: Send Message (taskId + signed x402 payload)
     activate Server
     Server->>Fac: Forward Signed Transaction
     activate Fac
@@ -68,7 +99,9 @@ sequenceDiagram
     Fac-->>Server: Valid
     
     %% Task Execution & Async Updates
-    Server-->>Client: Task Created (Status: Pending)
+    Server->>LLM: Run agent (prompt + tool loop)
+    LLM-->>Server: Model output
+    Server-->>Client: Task Status Update (Working)
     deactivate Server
     
     Note over Client, Server: Async Task Execution

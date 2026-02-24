@@ -19,7 +19,7 @@ class x402MerchantExecutor(x402ServerExecutor):
 
     def __init__(self, delegate: AgentExecutor):
         super().__init__(delegate, x402ExtensionConfig())
-        url = os.getenv("FACILITATOR_URL", "http://0.0.0.0:8001")
+        url = os.getenv("FACILITATOR_URL", "https://facilitator.bankofai.io")
         logger.info("Using Facilitator: %s", url)
         self._facilitator = FacilitatorClient(url)
 

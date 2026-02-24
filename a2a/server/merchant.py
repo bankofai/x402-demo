@@ -44,13 +44,13 @@ class MerchantAgent:
 
     # --- Callback ---
 
-    def before_agent_callback(self, ctx: CallbackContext):
+    def before_agent_callback(self, callback_context: CallbackContext):
         """Injects a virtual tool response when payment has been verified."""
-        data = ctx.state.get("payment_verified_data")
+        data = callback_context.state.get("payment_verified_data")
         if not data:
             return
-        del ctx.state["payment_verified_data"]
-        ctx.new_user_message = types.Content(parts=[
+        del callback_context.state["payment_verified_data"]
+        callback_context.new_user_message = types.Content(parts=[
             types.Part(function_response=types.FunctionResponse(name="check_payment_status", response=data))
         ])
 

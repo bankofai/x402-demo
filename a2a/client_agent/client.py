@@ -125,7 +125,7 @@ class ClientAgent:
         info = json.dumps([{"name": c.name, "description": c.description} for c in self.cards.values()], indent=2)
         return INSTRUCTION.format(agents_info=info)
 
-    async def _init_connections(self, _ctx: CallbackContext):
+    async def _init_connections(self, callback_context: CallbackContext):
         if self._initialized:
             return
         for addr in self.remote_agent_addresses:
