@@ -3,21 +3,78 @@
 import json
 import logging
 import uuid
+from typing import Callable
 
 import httpx
-from a2a.client import A2ACardResolver
-from a2a.types import AgentCard, JSONRPCError, Message, MessageSendParams, Part, Task, TaskState, TextPart
+from a2a.client import A2ACardResolver, A2AClient
+from a2a.types import (
+    AgentCard,
+    JSONRPCError,
+    JSONRPCErrorResponse,
+    Message,
+    MessageSendParams,
+    Part,
+    SendMessageRequest,
+    SendStreamingMessageRequest,
+    Task,
+    TaskArtifactUpdateEvent,
+    TaskState,
+    TaskStatusUpdateEvent,
+    TextPart,
+)
 from google.adk import Agent
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.tools.tool_context import ToolContext
 
-from .remote import RemoteAgentConnection, TaskUpdateCallback
 from .wallet import Wallet
 from x402_a2a.core.utils import x402Utils
 from x402_a2a.types import PaymentStatus
 
 logger = logging.getLogger(__name__)
+
+type TaskCallbackArg = Task | TaskStatusUpdateEvent | TaskArtifactUpdateEvent
+TaskUpdateCallback = Callable[[TaskCallbackArg], Task]
+
+
+class RemoteAgentConnection:
+    """Manages the A2A client connection to a single remote agent."""
+
+    def __init__(self, client: httpx.AsyncClient, card: AgentCard):
+        self.a2a = A2AClient(client, card)
+        self.card = card
+
+    async def send_message(
+        self, id: str, request: MessageSendParams, callback: TaskUpdateCallback | None
+    ) -> Task | Message | None:
+        if self.card.capabilities.streaming:
+            return await self._streaming(id, request, callback)
+        return await self._unary(id, request, callback)
+
+    async def _streaming(self, id, request, callback):
+        task = None
+        async for resp in self.a2a.send_message_streaming(SendStreamingMessageRequest(id=id, params=request)):
+            if not resp.root.result:
+                return resp.root.error
+            event = resp.root.result
+            if isinstance(event, Message):
+                return event
+            if callback and event:
+                task = callback(event)
+            if hasattr(event, "final") and event.final:
+                break
+        return task
+
+    async def _unary(self, id, request, callback):
+        resp = await self.a2a.send_message(SendMessageRequest(id=id, params=request))
+        if isinstance(resp.root, JSONRPCErrorResponse):
+            return resp.root.error
+        if isinstance(resp.root.result, Message):
+            return resp.root.result
+        if callback:
+            callback(resp.root.result)
+        return resp.root.result
+
 
 INSTRUCTION = """
 You are an orchestrator agent. Complete user requests by delegating to specialized agents.

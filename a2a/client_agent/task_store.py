@@ -5,7 +5,7 @@ import uuid
 
 from a2a.types import Artifact, Task, TaskArtifactUpdateEvent, TaskState, TaskStatus, TaskStatusUpdateEvent
 
-from .remote import TaskCallbackArg
+from .client import TaskCallbackArg
 
 logger = logging.getLogger(__name__)
 
