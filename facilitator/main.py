@@ -19,6 +19,7 @@ from bankofai.x402.facilitator import X402Facilitator
 from bankofai.x402.mechanisms.tron.exact_gasfree.facilitator import (
     ExactGasFreeFacilitatorMechanism,
 )
+from bankofai.x402.utils.gasfree import GasFreeAPIClient
 from bankofai.x402.mechanisms.tron.exact_permit import ExactPermitTronFacilitatorMechanism
 from bankofai.x402.mechanisms.evm.exact_permit import ExactPermitEvmFacilitatorMechanism
 from bankofai.x402.mechanisms.evm.exact import ExactEvmFacilitatorMechanism
@@ -108,6 +109,11 @@ bsc_facilitator_address = bsc_signer.get_address()
 # Initialize X402Facilitator
 facilitator = X402Facilitator()
 
+# Initialize GasFree API clients
+gasfree_clients = {
+    "tron:nile": GasFreeAPIClient(NetworkConfig.get_gasfree_api_base_url("tron:nile")),
+}
+
 # Register TRON mechanisms
 for network in TRON_NETWORKS:
     signer = TronFacilitatorSigner.from_private_key(TRON_PRIVATE_KEY)
@@ -121,6 +127,7 @@ for network in TRON_NETWORKS:
     if network == "nile":
         gasfree_mechanism = ExactGasFreeFacilitatorMechanism(
             signer,
+            clients=gasfree_clients,
             base_fee=TRON_BASE_FEE,
         )
         facilitator.register([f"tron:{network}"], gasfree_mechanism)

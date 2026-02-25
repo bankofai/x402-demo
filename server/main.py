@@ -171,7 +171,7 @@ async def root():
 @x402_protected(
     server=server,
     prices=["0.0001 USDT", "0.0001 USDD", "0 USDT", "0 USDD"],
-    schemes=["exact_permit", "exact_permit","exact_gasfree", "exact_gasfree"],
+    schemes=["exact_permit", "exact_permit", "exact_gasfree", "exact_gasfree"],
     network=CURRENT_NETWORK,
     pay_to=PAY_TO_ADDRESS,
 )

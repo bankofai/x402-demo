@@ -19,6 +19,8 @@ from dotenv import load_dotenv
 from bankofai.x402.clients import X402Client, X402HttpClient, SufficientBalancePolicy
 from bankofai.x402.mechanisms.tron.exact_permit import ExactPermitTronClientMechanism
 from bankofai.x402.mechanisms.tron.exact_gasfree.client import ExactGasFreeClientMechanism
+from bankofai.x402.utils.gasfree import GasFreeAPIClient
+from bankofai.x402.config import NetworkConfig
 from bankofai.x402.mechanisms.evm.exact_permit import ExactPermitEvmClientMechanism
 from bankofai.x402.mechanisms.evm.exact import ExactEvmClientMechanism
 from bankofai.x402.signers.client import TronClientSigner, EvmClientSigner
@@ -82,10 +84,17 @@ async def main():
     tron_signer = TronClientSigner.from_private_key(TRON_PRIVATE_KEY)
     evm_signer = EvmClientSigner.from_private_key(BSC_PRIVATE_KEY)
 
+    # Initialize GasFree API clients
+    gasfree_clients = {
+        "tron:nile": GasFreeAPIClient(NetworkConfig.get_gasfree_api_base_url("tron:nile")),
+        "tron:shasta": GasFreeAPIClient(NetworkConfig.get_gasfree_api_base_url("tron:shasta")),
+        "tron:mainnet": GasFreeAPIClient(NetworkConfig.get_gasfree_api_base_url("tron:mainnet")),
+    }
+
     # --- Register mechanisms for ALL networks ---
     x402_client = X402Client()
     x402_client.register("tron:*", ExactPermitTronClientMechanism(tron_signer))
-    x402_client.register("tron:*", ExactGasFreeClientMechanism(tron_signer))
+    x402_client.register("tron:*", ExactGasFreeClientMechanism(tron_signer, clients=gasfree_clients))
     x402_client.register("eip155:*", ExactPermitEvmClientMechanism(evm_signer))
     x402_client.register("eip155:*", ExactEvmClientMechanism(evm_signer))
 
