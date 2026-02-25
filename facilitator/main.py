@@ -16,6 +16,9 @@ import uvicorn
 
 from bankofai.x402.logging_config import setup_logging
 from bankofai.x402.facilitator import X402Facilitator
+from bankofai.x402.mechanisms.tron.exact_gasfree.facilitator import (
+    ExactGasFreeFacilitatorMechanism,
+)
 from bankofai.x402.mechanisms.tron.exact_permit import ExactPermitTronFacilitatorMechanism
 from bankofai.x402.mechanisms.evm.exact_permit import ExactPermitEvmFacilitatorMechanism
 from bankofai.x402.mechanisms.evm.exact import ExactEvmFacilitatorMechanism
@@ -113,6 +116,14 @@ for network in TRON_NETWORKS:
         base_fee=TRON_BASE_FEE,
     )
     facilitator.register([f"tron:{network}"], mechanism)
+
+    # Add GasFree support for nile
+    if network == "nile":
+        gasfree_mechanism = ExactGasFreeFacilitatorMechanism(
+            signer,
+            base_fee=TRON_BASE_FEE,
+        )
+        facilitator.register([f"tron:{network}"], gasfree_mechanism)
 
 # Register BSC testnet mechanisms (exact + exact)
 bsc_exact_mechanism = ExactPermitEvmFacilitatorMechanism(

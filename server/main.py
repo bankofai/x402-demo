@@ -13,6 +13,8 @@ from bankofai.x402.facilitator import FacilitatorClient
 from bankofai.x402.config import NetworkConfig
 from bankofai.x402.mechanisms.evm.exact_permit import ExactPermitEvmServerMechanism
 from bankofai.x402.mechanisms.evm.exact import ExactEvmServerMechanism
+from bankofai.x402.mechanisms.tron.exact_permit import ExactPermitTronServerMechanism
+from bankofai.x402.mechanisms.tron.exact_gasfree.server import ExactGasFreeServerMechanism
 from bankofai.x402.tokens import TokenInfo, TokenRegistry
 
 from PIL import Image, ImageDraw, ImageFont
@@ -72,6 +74,8 @@ _request_count = 0
 
 # Initialize server (TRON mechanisms auto-registered by default)
 server = X402Server()
+# Register TRON GasFree mechanism
+server.register(NetworkConfig.TRON_NILE, ExactGasFreeServerMechanism())
 # Register BSC testnet mechanisms
 server.register(NetworkConfig.BSC_TESTNET, ExactPermitEvmServerMechanism())
 server.register(NetworkConfig.BSC_TESTNET, ExactEvmServerMechanism())
@@ -166,8 +170,8 @@ async def root():
 @app.get("/protected-nile")
 @x402_protected(
     server=server,
-    prices=["0.0001 USDT", "0.0001 USDD"],
-    schemes=["exact_permit", "exact_permit"],
+    prices=["0.0001 USDT", "0.0001 USDD", "0 USDT", "0 USDD"],
+    schemes=["exact_permit", "exact_permit","exact_gasfree", "exact_gasfree"],
     network=CURRENT_NETWORK,
     pay_to=PAY_TO_ADDRESS,
 )
